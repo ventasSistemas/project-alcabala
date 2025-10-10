@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Accesor extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'nombres',
+        'direccion',
+        'celular',
+        'dni',
+    ];
+
+    // Relaciones
+    public function categorias()
+    {
+        return $this->hasMany(CategoriaEstablecimiento::class, 'accesor_id');
+    }
+
+    public function pagos()
+    {
+        return $this->hasMany(Pago::class, 'accesor_id');
+    }
+}
