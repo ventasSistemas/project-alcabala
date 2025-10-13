@@ -15,7 +15,7 @@ return new class extends Migration
             $table->date('fecha_pago')->nullable();          // fecha en la que se pagó
             $table->date('fecha_a_pagar');                   // fecha programada
             $table->decimal('monto', 8, 2);
-            $table->enum('estado', ['PENDIENTE', 'PAGADO'])->default('PENDIENTE');
+            $table->enum('estado', ['PENDIENTE', 'PAGADO', 'NO PAGO', 'PAGO ATRASADO',])->default('PENDIENTE');
             $table->string('observacion')->nullable();
             $table->timestamps();
 

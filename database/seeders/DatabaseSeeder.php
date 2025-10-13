@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Accesor;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\CategoriaEstablecimiento;
+use App\Models\Cliente;
 use Illuminate\Database\Seeder;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,5 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Accesor::factory(10)->create();
+        CategoriaEstablecimiento::factory(5)->create();
+        Cliente::factory(5)->create();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pago;
 use App\Models\Contrato;
+use App\Models\Cartilla;
 use App\Models\CategoriaEstablecimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,26 @@ class PagoController extends Controller
 
         return view('pagos.index', compact('pagos', 'categorias'));
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'cartillas_id' => 'required|array|min:1'
+        ]);
+
+        foreach ($request->cartillas_id as $id) {
+            $cartilla = Cartilla::find($id);
+            if ($cartilla && $cartilla->observacion !== 'Pagado') {
+                $cartilla->update([
+                    'observacion' => 'Pagado',
+                    'fecha_pago' => now(),
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Pagos registrados correctamente.');
+    }
+
 
     /**
      * Mostrar cartilla de un contrato (listado pagos)

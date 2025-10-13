@@ -10,6 +10,8 @@ use App\Http\Controllers\PuestoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\CartillaController;
+
 
 
 // Rutas de autenticación
@@ -42,4 +44,18 @@ Route::middleware('auth')->group(function () {
     Route::post('pagos/{pago}/marcar', [PagoController::class, 'marcarPagado'])->name('pagos.marcar');
     Route::view('reports', 'reports.index')->name('reports.index');
     
+    Route::get('/clientes/{id}/cartillas', [CartillaController::class, 'cartillasCliente']);
+    Route::get('/cartillas', [CartillaController::class, 'listaGeneral'])->name('cartillas.lista');
+    Route::prefix('cartillas')->group(function () {
+    Route::get('/{puesto}', [CartillaController::class, 'index'])->name('cartillas.index');
+    Route::post('/generar/{puesto}', [CartillaController::class, 'generar'])->name('cartillas.generar');
+    Route::patch('/estado/{cartilla}', [CartillaController::class, 'actualizarEstado'])->name('cartillas.estado');
+    Route::get('/imprimir/{puesto}', [CartillaController::class, 'imprimir'])->name('cartillas.imprimir');
+
+    Route::post('/pagos/store', [PagoController::class, 'store'])->name('pagos.store');
+    Route::get('/cartillas/{cartilla}/estado/{estado}', [App\Http\Controllers\CartillaController::class, 'cambiarEstado'])
+    ->name('cartillas.cambiarEstado');
+
+
+});
 });

@@ -57,7 +57,7 @@
                         @forelse($pagos as $index => $pago)
                             <tr class="text-center">
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $pago->contrato->cliente->nombres }} {{ $pago->contrato->cliente->apellidos }}</td>
+                                <td>{{ $pago->contrato->cliente->nombres }}</td>
                                 <td>{{ $pago->contrato->cliente->dni }}</td>
                                 <td>{{ $pago->contrato->puesto->categoria->nombre }}</td>
                                 <td>{{ $pago->contrato->puesto->numero_puesto }}</td>
@@ -75,7 +75,7 @@
                                     @if($pago->estado === 'PENDIENTE')
                                         <button class="btn btn-sm btn-outline-success btn-marcar-pagado"
                                             data-pago-id="{{ $pago->id }}"
-                                            data-cliente="{{ $pago->contrato->cliente->nombres }} {{ $pago->contrato->cliente->apellidos }}"
+                                            data-cliente="{{ $pago->contrato->cliente->nombres }}"
                                             data-dni="{{ $pago->contrato->cliente->dni }}"
                                             data-categoria="{{ $pago->contrato->puesto->categoria->nombre }}"
                                             data-puesto="{{ $pago->contrato->puesto->numero_puesto }}"

@@ -63,4 +63,9 @@ class Puesto extends Model
             $puesto->disponible = $puesto->cliente_id === null;
         });
     }
+
+    public function cartillas()
+    {
+        return $this->hasMany(Cartilla::class, 'puesto_id');
+    }
 }

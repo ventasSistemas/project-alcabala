@@ -12,6 +12,7 @@
         <li><a href="{{ route('accesores.index') }}" class="nav-link"><i class="fas fa-tools me-2"></i> Accesores</a></li>
         <li><a href="{{ route('categorias.index') }}" class="nav-link"><i class="fas fa-tags me-2"></i> Categorías</a></li>
         <li><a href="{{ route('puestos.index') }}" class="nav-link"><i class="fas fa-store me-2"></i> Puestos</a></li>
+        <li><a href="{{ route('cartillas.lista') }}" class="nav-link"><i class="fas fa-store me-2"></i> Cartillas</a></li>
         <li><a href="{{ route('clientes.index') }}" class="nav-link"><i class="fas fa-users me-2"></i> Clientes</a></li>
         <li><a href="{{ route('pagos.index') }}" class="nav-link"><i class="fas fa-credit-card me-2"></i> Pagos</a></li>
         <li><a href="{{ route('reports.index') }}" class="nav-link"><i class="fas fa-file-alt me-2"></i> Reportes</a></li>

@@ -36,6 +36,7 @@ class CategoriaEstablecimientoController extends Controller
             'hora_apertura' => 'nullable|date_format:H:i',
             'hora_cierre' => 'nullable|date_format:H:i',
             'pago_puesto' => 'required|numeric|min:0',
+            'pago_inscripcion_anual' => 'required|numeric|min:0',
             'accesores' => 'array|nullable',
         ]);
 
@@ -63,7 +64,9 @@ class CategoriaEstablecimientoController extends Controller
         }
 
         return response()->json([
+            //'pago_puesto_contrato' => $categoria->pago_puesto,
             'pago_puesto' => $categoria->pago_puesto,
+            'pago_inscripcion_anual' => $categoria->pago_inscripcion_anual,
             'hora_apertura' => $categoria->hora_apertura,
             'hora_cierre' => $categoria->hora_cierre,
         ]);
@@ -88,6 +91,7 @@ class CategoriaEstablecimientoController extends Controller
             'hora_apertura' => 'nullable|date_format:H:i',
             'hora_cierre' => 'nullable|date_format:H:i',
             'pago_puesto' => 'required|numeric|min:0',
+            'pago_inscripcion_anual' => 'required|numeric|min:0',
             'accesores' => 'array|nullable',
         ]);
 

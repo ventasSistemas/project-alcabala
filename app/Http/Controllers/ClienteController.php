@@ -20,8 +20,10 @@ class ClienteController extends Controller
             $query->whereRaw("CONCAT(nombres) LIKE ?", ["%{$request->nombres}%"]);
         }
 
+        $clientesCartillas = Cliente::with(['puestos.cartillas'])->paginate(10);
+
         $clientes = $query->orderBy('nombres')->paginate(20);
-        return view('clientes.index', compact('clientes'));
+        return view('clientes.index', compact('clientes', 'clientesCartillas'));
     }
 
     public function create()

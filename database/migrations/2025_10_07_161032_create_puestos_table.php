@@ -26,11 +26,11 @@ return new class extends Migration
             $table->date('primer_pago_fecha')->nullable();
             $table->decimal('primer_pago_monto', 8, 2)->nullable();
             $table->enum('modo_pago', ['SEMANAL', 'MENSUAL', 'ANUAL'])->nullable();
-            $table->string('accesor_cobro')->nullable(); // o ->foreignId('accesor_id') si se maneja en tabla aparte
-
-            $table->timestamps();
+            $table->string('accesor_cobro')->nullable();
 
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
+            $table->timestamps();
+
         });
     }
 

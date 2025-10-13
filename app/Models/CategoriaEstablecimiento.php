@@ -20,6 +20,7 @@ class CategoriaEstablecimiento extends Model
         'hora_apertura',
         'hora_cierre',
         'pago_puesto',
+        'pago_inscripcion_anual',
     ];
 
     /**

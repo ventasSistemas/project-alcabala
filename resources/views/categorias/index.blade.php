@@ -24,6 +24,7 @@
                             <th>Nombre</th>
                             <th>Dirección</th>
                             <th>Pago Puesto (S/)</th>
+                            <th>Pago Inscripcion Anual (S/)</th>
                             <th>Hora Apertura</th>
                             <th>Hora Cierre</th>
                             <th>Accesores Asignados</th>
@@ -37,6 +38,7 @@
                                 <td class="fw-semibold">{{ $categoria->nombre }}</td>
                                 <td>{{ $categoria->direccion ?? '-' }}</td>
                                 <td>{{ number_format($categoria->pago_puesto, 2) }}</td>
+                                <td>{{ number_format($categoria->pago_inscripcion_anual, 2) }}</td>
                                 <td>{{ $categoria->hora_apertura ?? '-' }}</td>
                                 <td>{{ $categoria->hora_cierre ?? '-' }}</td>
                                 <td>
@@ -56,6 +58,7 @@
                                         data-nombre="{{ $categoria->nombre }}"
                                         data-direccion="{{ $categoria->direccion }}"
                                         data-pago_puesto="{{ number_format($categoria->pago_puesto, 2) }}"
+                                        data-pago_inscripcion_anual="{{ number_format($categoria->pago_inscripcion_anual, 2) }}"
                                         data-hora_apertura="{{ $categoria->hora_apertura }}"
                                         data-hora_cierre="{{ $categoria->hora_cierre }}"
                                         data-lat_actual="{{ $categoria->latitud_actual }}"
@@ -81,6 +84,7 @@
                                         data-latdestino="{{ $categoria->lat_destino }}"
                                         data-lngdestino="{{ $categoria->lng_destino }}"
                                         data-pago_puesto="{{ $categoria->pago_puesto }}"
+                                        data-pago_puesto="{{ $categoria->pago_inscripcion_anual }}"
                                         data-hora_apertura="{{ $categoria->hora_apertura }}"
                                         data-hora_cierre="{{ $categoria->hora_cierre }}"
                                     >
@@ -214,6 +218,12 @@
               <label class="fw-semibold">Pago del Puesto (S/)</label>
               <input type="number" step="0.01" class="form-control" name="pago_puesto" id="pago_puesto" required>
             </div>
+            
+            <div class="col-md-4">
+              <label class="fw-semibold">Pago Inscripcion Anual (S/)</label>
+              <input type="number" step="0.01" class="form-control" name="pago_inscripcion_anual" id="pago_inscripcion_anual" required>
+            </div>
+
 
             <!-- 👥 Personal -->
             <div class="col-12 mt-3">
@@ -292,6 +302,11 @@
           </div>
 
           <div class="col-md-4">
+            <label class="fw-semibold">Pago Inscripcion Anual (S/):</label>
+            <p id="ver_pago" class="form-control-plaintext border-bottom"></p>
+          </div>
+
+          <div class="col-md-4">
             <label class="fw-semibold">Hora Apertura:</label>
             <p id="ver_hora_apertura" class="form-control-plaintext border-bottom"></p>
           </div>
@@ -337,6 +352,7 @@ modalVer.addEventListener('show.bs.modal', function (event) {
     const nombre = button.getAttribute('data-nombre');
     const direccion = button.getAttribute('data-direccion');
     const pago = button.getAttribute('data-pago_puesto');
+    const pago_inscripcion_anual = button.getAttribute('data-pago_inscripcion_anual');
     const horaApertura = button.getAttribute('data-hora_apertura');
     const horaCierre = button.getAttribute('data-hora_cierre');
     const imagen = button.getAttribute('data-imagen');
@@ -346,6 +362,7 @@ modalVer.addEventListener('show.bs.modal', function (event) {
     document.getElementById('ver_nombre').textContent = nombre || '-';
     document.getElementById('ver_direccion').textContent = direccion || '-';
     document.getElementById('ver_pago').textContent = pago || '-';
+    document.getElementById('ver_pago_inscripcion_anual').textContent = pago_inscripcion_anual || '-';
     document.getElementById('ver_hora_apertura').textContent = horaApertura || '-';
     document.getElementById('ver_hora_cierre').textContent = horaCierre || '-';
 
@@ -417,7 +434,6 @@ function actualizarMapa() {
             waypoints: [L.latLng(lat1, lng1), L.latLng(lat2, lng2)],
             lineOptions: {
                 styles: [{ color: 'red', weight: 4, opacity: 0.8 }],
-                // 👇 aseguramos que la línea quede por debajo del mapa
                 zIndex: 1
             },
             createMarker: function() { return null; },
@@ -453,7 +469,6 @@ function actualizarMapa() {
         })
         .addTo(mapa);
 
-        // 👇 esto asegura que las calles (tileLayer) estén sobre la ruta
         mapa.eachLayer(layer => {
             if (layer instanceof L.TileLayer) {
                 layer.setZIndex(1000);

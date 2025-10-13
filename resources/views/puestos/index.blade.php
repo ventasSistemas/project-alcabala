@@ -54,9 +54,22 @@
                                         data-categoria="{{ $puesto->categoria_id }}"
                                         data-disponible="{{ $puesto->disponible }}"
                                         data-cliente-id="{{ $puesto->cliente->id ?? '' }}"
-                                        data-cliente-nombre="{{ $puesto->cliente ? $puesto->cliente->nombres.' '.$puesto->cliente->apellidos : '' }}">
+                                        data-cliente-nombre="{{ $puesto->cliente ? $puesto->cliente->nombres.' '.$puesto->cliente->apellidos : '' }}"
+                                        data-servicios="{{ json_encode($puesto->servicios ?? []) }}"
+                                        data-observaciones="{{ $puesto->observaciones ?? '' }}"
+                                        data-hora-apertura="{{ $puesto->hora_apertura ?? '' }}"
+                                        data-hora-cierre="{{ $puesto->hora_cierre ?? '' }}"
+                                        data-fecha-inicio="{{ $puesto->fecha_inicio ?? '' }}"
+                                        data-fecha-fin="{{ $puesto->fecha_fin ?? '' }}"
+                                        data-primer-pago-fecha="{{ $puesto->primer_pago_fecha ?? '' }}"
+                                        data-primer-pago-monto="{{ $puesto->primer_pago_monto ?? '' }}"
+                                        data-modo-pago="{{ $puesto->modo_pago ?? '' }}"
+                                        data-accesor-cobro="{{ $puesto->accesor_cobro ?? '' }}"
+                                        data-imagen="{{ $puesto->imagen_puesto ?? '' }}"
+                                    >
                                         <i class="fas fa-edit"></i>
                                     </button>
+
                                     <form action="{{ route('puestos.destroy', $puesto->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
@@ -92,7 +105,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="formPuesto" method="POST" action="{{ route('puestos.store') }}">
+            <form id="formPuesto" method="POST" action="{{ route('puestos.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" id="puesto_id" name="puesto_id">
 
@@ -116,12 +129,14 @@
                         </div>
 
                         <!-- Costo, Hora Apertura y Cierre -->
+                        
                         <div class="col-12">
                             <div class="row g-3">
+                                <!--
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Costo (S/)</label>
                                     <input type="text" id="pago_puesto" class="form-control" readonly>
-                                </div>
+                                </div>-->
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Hora Apertura</label>
                                     <input type="time" id="hora_apertura" class="form-control" readonly>
@@ -214,20 +229,20 @@
                             <label class="fw-bold text-primary border-bottom pb-1">Detalles del Contrato</label>
                             <div class="row g-3 mt-2">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Fecha de Inicio</label>
-                                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio">
+                                    <label class="form-label fw-semibold">Fecha de Inscripción</label>
+                                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" readonly>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Fecha de Fin</label>
-                                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin">
+                                    <label class="form-label fw-semibold">Fecha Fin de Inscripción</label>
+                                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" readonly>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Hora Apertura</label>
+                                    <label class="form-label fw-semibold">Hora Apertura (Usuario)</label>
                                     <input type="time" class="form-control" id="hora_apertura" name="hora_apertura">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Hora Cierre</label>
+                                    <label class="form-label fw-semibold">Hora Cierre (Usuario)</label>
                                     <input type="time" class="form-control" id="hora_cierre" name="hora_cierre">
                                 </div>
 
@@ -235,30 +250,22 @@
                                     <label class="form-label fw-semibold">Fecha del Primer Pago</label>
                                     <input type="date" class="form-control" id="primer_pago_fecha" name="primer_pago_fecha">
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Monto del Primer Pago (S/)</label>
-                                    <input type="number" step="0.01" class="form-control" id="primer_pago_monto" name="primer_pago_monto">
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Costo a cobrar cada jueves (S/)</label>
+                                    <input type="text" id="pago_puesto" class="form-control" readonly>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Costo Inscripcion Anual (S/)</label>
+                                    <input type="text" id="pago_inscripcion_anual" class="form-control">
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Modo de Pago</label>
-                                    <select class="form-select" id="modo_pago" name="modo_pago" required>
-                                        <option value="">Seleccionar</option>
-                                        <option value="SEMANAL">Semanal</option>
-                                        <option value="MENSUAL">Mensual</option>
-                                        <option value="ANUAL">Anual</option>
-                                    </select>
-                                </div>
+                                <!--
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Accesor a Cargo</label>
                                     <input type="text" class="form-control" id="accesor_cobro" name="accesor_cobro" placeholder="Nombre del accesor a cargo...">
-                                </div>
-
-                                <div class="col-12 text-end mt-3">
-                                    <button type="button" class="btn btn-outline-primary" id="btnVerCartilla">
-                                        <i class="bi bi-card-list"></i> Ver Cartilla de Pagos
-                                    </button>
-                                </div>
+                                </div>-->
                             </div>
                         </div>
                     </div>
@@ -272,93 +279,158 @@
         </div>
     </div>
 </div>
-
-
-<!-- MODAL: Contrato -->
-<div class="modal fade" id="modalContrato" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-semibold">Contrato</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-                <div id="contenidoContrato" class="text-center text-muted">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
-                    <p class="mt-2">Cargando información del contrato...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
 <script>
+
+// --- Manejo temporal del cliente asignado (guardado en localStorage) ---
+function guardarClienteTemporal(cliente) {
+    localStorage.setItem('clienteTemporal', JSON.stringify(cliente));
+}
+
+function obtenerClienteTemporal() {
+    const c = localStorage.getItem('clienteTemporal');
+    return c ? JSON.parse(c) : null;
+}
+
+function limpiarClienteTemporal() {
+    localStorage.removeItem('clienteTemporal');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     // ---- Abrir modal EDITAR ----
     document.querySelectorAll('.btn-editar-puesto').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const form = document.getElementById('formPuesto');
-            form.action = `/puestos/${btn.dataset.id}`;
-            if (!form.querySelector('input[name="_method"]')) {
-                const m = document.createElement('input');
-                m.type = 'hidden';
-                m.name = '_method';
-                m.value = 'PUT';
-                form.appendChild(m);
-            }
+    btn.addEventListener('click', () => {
+        const form = document.getElementById('formPuesto');
+        form.action = `/puestos/${btn.dataset.id}`;
+        if (!form.querySelector('input[name="_method"]')) {
+            const m = document.createElement('input');
+            m.type = 'hidden';
+            m.name = '_method';
+            m.value = 'PUT';
+            form.appendChild(m);
+        }
 
-            document.getElementById('puesto_id').value = btn.dataset.id;
-            document.getElementById('numero_puesto').value = btn.dataset.numero;
-            document.getElementById('categoria_id').value = btn.dataset.categoria;
-            document.getElementById('disponible').value = btn.dataset.disponible;
-            document.getElementById('cliente_busqueda').value = btn.dataset.clienteNombre;
-            document.getElementById('cliente_id').value = btn.dataset.clienteId;
+        // Campos básicos
+        document.getElementById('puesto_id').value = btn.dataset.id;
+        document.getElementById('numero_puesto').value = btn.dataset.numero;
+        document.getElementById('categoria_id').value = btn.dataset.categoria;
+        document.getElementById('disponible').value = btn.dataset.disponible;
+
+        // --- Servicios ---
+        const serviciosSeleccionados = JSON.parse(btn.dataset.servicios || '[]');
+        document.querySelectorAll('input[name="servicios[]"]').forEach(chk => {
+            chk.checked = serviciosSeleccionados.includes(chk.value);
         });
+
+        // --- Otros campos ---
+        document.getElementById('observaciones').value = btn.dataset.observaciones || '';
+        document.getElementById('hora_apertura').value = btn.dataset.horaApertura || '';
+        document.getElementById('hora_cierre').value = btn.dataset.horaCierre || '';
+        document.getElementById('fecha_inicio').value = btn.dataset.fechaInicio || '';
+        document.getElementById('fecha_fin').value = btn.dataset.fechaFin || '';
+        document.getElementById('primer_pago_fecha').value = btn.dataset.primerPagoFecha || '';
+        document.getElementById('primer_pago_monto').value = btn.dataset.primerPagoMonto || '';
+        document.getElementById('modo_pago').value = btn.dataset.modoPago || '';
+        document.getElementById('accesor_cobro').value = btn.dataset.accesorCobro || '';
+
+        // --- Cliente ---
+        const contenedorCliente = document.getElementById('contenedorClienteDinamico');
+        if (btn.dataset.clienteNombre) {
+            document.getElementById('radioBuscar').checked = true;
+            contenedorCliente.innerHTML = `
+                <label class="form-label fw-semibold">Cliente Asignado</label>
+                <input type="text" class="form-control" value="${btn.dataset.clienteNombre}" readonly>
+                <input type="hidden" id="cliente_id" name="cliente_id" value="${btn.dataset.clienteId}">
+            `;
+        } else {
+            document.getElementById('radioNinguno').checked = true;
+            contenedorCliente.innerHTML = '';
+        }
+
+        // --- Imagen ---
+        const imgPreview = document.getElementById('preview-imagen');
+        imgPreview.src = btn.dataset.imagen
+            ? `/storage/${btn.dataset.imagen}`
+            : 'https://media.istockphoto.com/id/1147544807/es/vector/no-imagen-en-miniatura-gr%C3%A1fico-vectorial.jpg?s=612x612';
+
+        // Título y botón
+        document.getElementById('modalPuestoLabel').textContent = 'Editar Puesto';
+        document.getElementById('btnGuardarPuesto').textContent = 'Actualizar Puesto';
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('modalPuesto'));
+        modal.show();
     });
+});
+
+
+    // --- Antes de enviar el formulario ---
+document.getElementById('formPuesto').addEventListener('submit', function(e) {
+    const clienteTemp = obtenerClienteTemporal();
+    const radioNinguno = document.getElementById('radioNinguno');
+
+    // Si se eligió "Ninguno", agrega cliente_id vacío
+    if (radioNinguno.checked) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'cliente_id';
+        input.value = '';
+        e.target.appendChild(input);
+        limpiarClienteTemporal();
+        return;
+    }
+
+    // Si se eligió cliente (buscar o crear)
+    if (clienteTemp) {
+        Object.keys(clienteTemp).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `cliente_temp[${key}]`;
+            input.value = clienteTemp[key];
+            e.target.appendChild(input);
+        });
+        limpiarClienteTemporal();
+    }
+});
 
     // ---- Abrir modal CREAR ----
     document.getElementById('modalPuesto').addEventListener('show.bs.modal', (e) => {
+        const form = document.getElementById('formPuesto');
+
+        // Si NO es editar, es un nuevo registro
         if (!e.relatedTarget?.classList.contains('btn-editar-puesto')) {
-            const form = document.getElementById('formPuesto');
             form.action = '/puestos';
             document.querySelector('input[name="_method"]')?.remove();
-            form.reset();
+            form.reset(); // limpia todos los inputs
+
+            // Limpia valores específicos
+            document.getElementById('puesto_id').value = '';
             document.getElementById('disponible').value = '1';
-            document.getElementById('cliente_sugerencias').innerHTML = '';
+            document.getElementById('cliente_sugerencias')?.replaceChildren(); 
+            document.getElementById('contenedorClienteDinamico').innerHTML = '';
+            document.getElementById('contenedorContrato').classList.add('d-none');
+            
+            // Deseleccionar radios y dejar "ninguno"
+            document.getElementById('radioNinguno').checked = true;
+
+            // Deseleccionar todos los servicios
+            document.querySelectorAll('input[name="servicios[]"]').forEach(chk => chk.checked = false);
+
+            // Restablecer imagen de vista previa
+            const preview = document.getElementById('preview-imagen');
+            preview.src = 'https://media.istockphoto.com/id/1147544807/es/vector/no-imagen-en-miniatura-gr%C3%A1fico-vectorial.jpg?s=612x612&w=0&k=20&c=Bb7KlSXJXh3oSDlyFjIaCiB9llfXsgS7mHFZs6qUgVk=';
+
+            // Restaurar textos del botón
+            const btnGuardar = document.getElementById('btnGuardarPuesto');
+            btnGuardar.textContent = 'Guardar Puesto';
+            btnGuardar.type = 'submit';
         }
     });
 
-    // ---- Ver contrato ----
-    document.querySelectorAll('.btn-ver-contrato').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const contenedor = document.getElementById('contenidoContrato');
-            contenedor.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando...</p>';
-            fetch(`/puestos/${btn.dataset.puestoId}`)
-                .then(r => r.json())
-                .then(data => {
-                    const c = data.contratoActivo;
-                    if (!c) {
-                        contenedor.innerHTML = `<div class="text-muted"><i class="fas fa-info-circle"></i> No hay contrato activo para este puesto.</div>`;
-                        return;
-                    }
-                    contenedor.innerHTML = `
-                        <div class="row text-start">
-                            <div class="col-md-6"><strong>Cliente:</strong> ${data.cliente.nombres} ${data.cliente.apellidos}</div>
-                            <div class="col-md-6"><strong>Puesto:</strong> ${data.puesto.numero_puesto}</div>
-                            <div class="col-md-4 mt-3"><strong>Fecha Inicio:</strong> ${c.fecha_inicio}</div>
-                            <div class="col-md-4 mt-3"><strong>Fecha Fin:</strong> ${c.fecha_fin ?? '---'}</div>
-                            <div class="col-md-4 mt-3"><strong>Frecuencia:</strong> ${c.frecuencia_pago}</div>
-                            <div class="col-md-4 mt-3"><strong>Monto:</strong> S/ ${c.monto}</div>
-                            <div class="col-md-4 mt-3"><strong>Renovable:</strong> ${c.renovable ? 'Sí' : 'No'}</div>
-                        </div>
-                    `;
-                });
-        });
-    });
+
 
 });
 
@@ -368,6 +440,7 @@ document.getElementById('categoria_id').addEventListener('change', function() {
 
     // Limpia los campos si no hay selección
     document.getElementById('pago_puesto').value = '';
+    document.getElementById('pago_inscripcion_anual').value = '';
     document.getElementById('hora_apertura').value = '';
     document.getElementById('hora_cierre').value = '';
 
@@ -383,6 +456,7 @@ document.getElementById('categoria_id').addEventListener('change', function() {
             return;
         }
         document.getElementById('pago_puesto').value = data.pago_puesto ?? '';
+        document.getElementById('pago_inscripcion_anual').value = data.pago_inscripcion_anual ?? '';
         document.getElementById('hora_apertura').value = data.hora_apertura ?? '';
         document.getElementById('hora_cierre').value = data.hora_cierre ?? '';
     })
@@ -520,16 +594,17 @@ function inicializarBuscadorCliente() {
 
                         // Botón asignar usuario existente
                         document.getElementById('btnAsignarExistente').addEventListener('click', () => {
+                            guardarClienteTemporal(c); 
+
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Cliente asignado correctamente',
-                                text: `${c.nombres} fue vinculado al puesto.`,
+                                text: `${c.nombres} fue vinculado temporalmente al puesto.`,
                                 showConfirmButton: false,
                                 timer: 2000
                             });
+
                             document.getElementById('contenedorContrato').classList.remove('d-none');
-                            btnGuardar.textContent = 'Guardar Puesto';
-                            btnGuardar.type = 'submit';
                         });
                     };
                     sugerencias.appendChild(item);
@@ -556,48 +631,66 @@ function inicializarCreacionCliente() {
             return;
         }
 
-        clienteSeleccionado = { nombres, dni, celular };
-        Swal.fire({
-            icon: 'success',
-            title: 'Cliente creado y asignado',
-            text: `${nombres} ha sido registrado correctamente.`,
-            showConfirmButton: false,
-            timer: 2500
-        });
-        document.getElementById('contenedorContrato').classList.remove('d-none');
-        btnGuardar.textContent = 'Guardar Puesto';
-        btnGuardar.type = 'submit';
+        const nuevoCliente = { nombres, dni, celular };
+            guardarClienteTemporal(nuevoCliente);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Cliente creado temporalmente',
+                text: `${nombres} ha sido asignado temporalmente al puesto.`,
+                showConfirmButton: false,
+                timer: 2500
+            });
+            document.getElementById('contenedorContrato').classList.remove('d-none');
     });
 }
 
-// --- Botón Crear Contrato ---
-btnGuardar.addEventListener('click', () => {
-    if (btnGuardar.textContent === 'Crear Contrato') {
-        const modalContrato = new bootstrap.Modal(document.getElementById('modalContrato'));
-        modalContrato.show();
-    }
-});
+// --- Cálculo automático de Fechas Inicio / Fin ---
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInicio = document.getElementById('fecha_inicio');
+    const fechaFin = document.getElementById('fecha_fin');
 
-// Mostrar la cartilla de pagos simulada
-document.getElementById('btnVerCartilla').addEventListener('click', () => {
-    const modo = document.getElementById('modo_pago').value;
-    const fechaInicio = document.getElementById('fecha_inicio').value;
-    const fechaFin = document.getElementById('fecha_fin').value;
-    const monto = document.getElementById('primer_pago_monto').value;
-    const puestoId = document.getElementById('puesto_id')?.value; // asegúrate de tenerlo oculto
+    function calcularFechaFin(fechaBase) {
+        const base = new Date(fechaBase);
+        let anioFin = base.getFullYear() + 1;
+        let mesFin = base.getMonth();
+        let diaFin = base.getDate();
 
-    if (!modo || !fechaInicio || !fechaFin || !monto) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Datos incompletos',
-            text: 'Completa los campos de contrato para generar la cartilla.',
-        });
-        return;
+        let fechaProxima = new Date(anioFin, mesFin, diaFin);
+
+        // Si el mes cambia (ej: 29 feb → marzo), mover al 1 del mes siguiente
+        if (fechaProxima.getMonth() !== mesFin) {
+            fechaProxima = new Date(anioFin, mesFin + 1, 1);
+        }
+
+        return fechaProxima.toISOString().split('T')[0];
     }
 
-    // Redirigir con parámetros
-    const url = `/puestos/${puestoId}/cartilla?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&modo_pago=${modo}&primer_pago_monto=${monto}`;
-    window.open(url, '_blank'); // abre la cartilla en una nueva pestaña
+    function establecerFechasPorDefecto() {
+        const hoy = new Date();
+        const fechaInicioStr = hoy.toISOString().split('T')[0];
+        fechaInicio.value = fechaInicioStr;
+        fechaFin.value = calcularFechaFin(fechaInicioStr);
+    }
+
+    // Inicializar con la fecha actual al cargar el modal
+    establecerFechasPorDefecto();
+
+    // Recalcular automáticamente al cambiar la fecha de inicio
+    fechaInicio.addEventListener('change', function() {
+        if (this.value) {
+            fechaFin.value = calcularFechaFin(this.value);
+        }
+    });
+
+    // También recalcular al asignar o crear un cliente (mostrar contrato)
+    const contenedorContrato = document.getElementById('contenedorContrato');
+    const observer = new MutationObserver(() => {
+        if (!contenedorContrato.classList.contains('d-none')) {
+            establecerFechasPorDefecto();
+        }
+    });
+    observer.observe(contenedorContrato, { attributes: true, attributeFilter: ['class'] });
 });
 
 </script>

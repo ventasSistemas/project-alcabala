@@ -6,6 +6,7 @@ use App\Models\Puesto;
 use App\Models\CategoriaEstablecimiento;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
+use App\Models\Cartilla;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -48,28 +49,102 @@ class PuestoController extends Controller
             'categoria_id' => 'required|exists:categoria_establecimientos,id',
             'numero_puesto' => 'required|string|max:255|unique:puestos,numero_puesto',
             'cliente_id' => 'nullable|exists:clientes,id',
-            'imagen_puesto' => 'nullable|image|max:2048',
+            'imagen_puesto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'servicios' => 'nullable|array',
             'servicios.*' => 'in:Agua,Luz,Otros',
             'observaciones' => 'nullable|string|max:1000',
 
             // Nuevos campos
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'hora_apertura' => 'required|date_format:H:i',
-            'hora_cierre' => 'required|date_format:H:i',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
+            'hora_apertura' => 'nullable|date_format:H:i',
+            'hora_cierre' => 'nullable|date_format:H:i',
             'primer_pago_fecha' => 'nullable|date',
-            'primer_pago_monto' => 'nullable|numeric|min:0',
-            'modo_pago' => 'nullable|in:SEMANAL,MENSUAL,ANUAL',
+            //'primer_pago_monto' => 'nullable|numeric|min:0',
+            //'modo_pago' => 'nullable|in:SEMANAL,MENSUAL,ANUAL',
             'accesor_cobro' => 'nullable|string|max:255',
+
+            // Cliente temporal (enviado desde JS)
+            'cliente_temp' => 'nullable|array',
+            'cliente_temp.nombres' => 'nullable|string|max:255',
+            'cliente_temp.dni' => 'nullable|string|max:20',
+            'cliente_temp.celular' => 'nullable|string|max:20',
         ]);
 
-        // Manejar imagen si se sube
+        // ✅ Guardar imagen si se sube en public/images/puestos
         if ($request->hasFile('imagen_puesto')) {
-            $data['imagen_puesto'] = $request->file('imagen_puesto')->store('puestos', 'public');
+            $imagen = $request->file('imagen_puesto');
+            $nombreArchivo = time() . '_' . $imagen->getClientOriginalName();
+            $rutaDestino = public_path('images/puestos');
+
+            // Crea la carpeta si no existe
+            if (!file_exists($rutaDestino)) {
+                mkdir($rutaDestino, 0777, true);
+            }
+
+            // Mueve el archivo físicamente al directorio /public/images/puestos
+            $imagen->move($rutaDestino, $nombreArchivo);
+
+            // Guarda solo la ruta relativa (para usar en vistas con asset())
+            $data['imagen_puesto'] = 'images/puestos/' . $nombreArchivo;
         }
 
-        Puesto::create($data);
+        DB::transaction(function () use (&$data, $request) {
+            // --- Manejar cliente temporal ---
+            if ($request->filled('cliente_temp.dni')) {
+                $temp = $request->cliente_temp;
+
+                // Busca por DNI o crea si no existe
+                $cliente = Cliente::firstOrCreate(
+                    ['dni' => $temp['dni']],
+                    [
+                        'nombres' => $temp['nombres'] ?? 'N/D',
+                        'celular' => $temp['celular'] ?? null,
+                    ]
+                );
+
+                $data['cliente_id'] = $cliente->id;
+            }
+
+            // --- Crear el puesto ---
+            $puesto = Puesto::create($data);
+
+            // --- Vincular cliente (si hay) ---
+            if (!empty($data['cliente_id'])) {
+                $puesto->update(['disponible' => false]);
+
+                // ✅ Crear automáticamente cartillas de los jueves usando el pago de la categoría
+                if ($puesto->fecha_inicio && $puesto->fecha_fin) {
+                    $fechaInicio = Carbon::parse($puesto->fecha_inicio);
+                    $fechaFin = Carbon::parse($puesto->fecha_fin);
+
+                    // Obtener monto desde la categoría asociada
+                    $categoria = \App\Models\CategoriaEstablecimiento::find($puesto->categoria_id);
+                    $montoPago = $categoria ? $categoria->pago_puesto : 0;
+
+                    $fechaActual = $fechaInicio->copy();
+                    $nro = 1;
+
+                    while ($fechaActual->lte($fechaFin)) {
+                        if ($fechaActual->isThursday()) {
+                            Cartilla::create([
+                                'puesto_id' => $puesto->id,
+                                'cliente_id' => $puesto->cliente_id,
+                                'nro' => $nro++,
+                                'fecha_pagar' => $fechaActual->format('Y-m-d'),
+                                'cuota' => $montoPago,
+                                'observacion' => 'Pendiente',
+                                'modo_pago' => 'SEMANAL',
+                                'accesor_cobro' => $puesto->accesor_cobro,
+                            ]);
+                        }
+
+                        $fechaActual->addDay(); // avanzar un día
+                    }
+                }
+
+            }
+        });
 
         return redirect()->route('puestos.index')->with('success', 'Puesto registrado correctamente.');
     }
@@ -98,13 +173,26 @@ class PuestoController extends Controller
             'hora_apertura' => 'nullable|date_format:H:i',
             'hora_cierre' => 'nullable|date_format:H:i',
             'primer_pago_fecha' => 'nullable|date',
-            'primer_pago_monto' => 'nullable|numeric|min:0',
-            'modo_pago' => 'nullable|in:SEMANAL,MENSUAL,ANUAL',
+            //'primer_pago_monto' => 'nullable|numeric|min:0',
+            //'modo_pago' => 'nullable|in:SEMANAL,MENSUAL,ANUAL',
             'accesor_cobro' => 'nullable|string|max:255',
         ]);
 
         if ($request->hasFile('imagen_puesto')) {
-            $data['imagen_puesto'] = $request->file('imagen_puesto')->store('puestos', 'public');
+            $imagen = $request->file('imagen_puesto');
+            $nombreArchivo = time() . '_' . $imagen->getClientOriginalName();
+            $rutaDestino = public_path('images/puestos');
+
+            // Crea la carpeta si no existe
+            if (!file_exists($rutaDestino)) {
+                mkdir($rutaDestino, 0777, true);
+            }
+
+            // Mueve el archivo físicamente
+            $imagen->move($rutaDestino, $nombreArchivo);
+
+            // Guarda solo la ruta relativa (para mostrar luego en las vistas)
+            $data['imagen_puesto'] = 'images/puestos/' . $nombreArchivo;
         }
 
         $puesto->update($data);
@@ -194,7 +282,7 @@ class PuestoController extends Controller
         $fecha = $inicio->copy();
         $nro = 1;
         while ($fecha <= $fin) {
-            if ($fecha->isThursday()) { // feria solo los jueves
+            if ($fecha->isThursday()) { 
                 $pagos[] = [
                     'nro' => $nro++,
                     'fecha_pagar' => $fecha->format('d/m/Y'),

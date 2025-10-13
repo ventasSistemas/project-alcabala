@@ -29,6 +29,8 @@ return new class extends Migration
 
             // Pago del puesto
             $table->decimal('pago_puesto', 8, 2)->default(0);
+            // Pago de inscripcion anual
+            $table->decimal('pago_inscripcion_anual', 8, 2)->default(0);
 
             $table->timestamps();
         });

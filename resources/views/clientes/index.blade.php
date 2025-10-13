@@ -22,7 +22,6 @@
                         <tr>
                             <th>#</th>
                             <th>Nombres</th>
-       
                             <th>DNI</th>
                             <th>Celular</th>
                             <th>Acciones</th>
@@ -37,6 +36,7 @@
                                 <td>{{ $cliente->dni }}</td>
                                 <td>{{ $cliente->celular ?? '-' }}</td>
                                 <td>
+                                    <!-- Botón Editar Cliente -->
                                     <button 
                                         class="btn btn-sm btn-outline-warning me-2" 
                                         data-bs-toggle="modal" 
@@ -49,6 +49,7 @@
                                     >
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    <!-- Botón Elimninar Cliente -->
                                     <form action="{{ route('clientes.destroy', $cliente->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
@@ -56,6 +57,24 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+
+                                    <!-- Botón Ver Cartilla -->
+                                    @php
+                                        $tieneCartillas = $cliente->puestos->flatMap->cartillas->count() > 0;
+                                    @endphp
+                                    @if ($tieneCartillas)
+                                        <!-- Botón para ver las cartillas -->
+                                    <button 
+                                        class="btn btn-sm btn-outline-info ms-2 btnVerCartilla"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalCartilla"
+                                        data-cliente="{{ $cliente->id }}"
+                                    >
+                                        <i class="fas fa-file-invoice-dollar me-1"></i> Ver Cartilla
+                                    </button>
+
+                                    @endif
+
                                 </td>
                             </tr>
                         @empty
@@ -120,6 +139,23 @@
     </div>
 </div>
 
+<!-- Modal: Cartilla del Cliente -->
+<div class="modal fade" id="modalCartilla" tabindex="-1" aria-labelledby="modalCartillaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalCartillaLabel">Cartilla de Pagos del Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="tablaCartilla">
+                <div class="text-center text-muted py-5">Selecciona un cliente para ver su cartilla...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 @push('scripts')
 <script>
     const modalCliente = document.getElementById('modalCliente');
@@ -152,6 +188,23 @@
             form.reset();
         }
     });
+
+document.querySelectorAll('.btnVerCartilla').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const clienteId = btn.dataset.cliente;
+        const tablaCartilla = document.getElementById('tablaCartilla');
+        tablaCartilla.innerHTML = '<div class="text-center text-muted py-5">Cargando información...</div>';
+
+        try {
+            const response = await fetch(`/clientes/${clienteId}/cartillas`);
+            const html = await response.text();
+            tablaCartilla.innerHTML = html;
+        } catch (error) {
+            tablaCartilla.innerHTML = '<div class="text-center text-danger py-5">Error al cargar la cartilla.</div>';
+            console.error('Error al cargar cartillas:', error);
+        }
+    });
+});
 </script>
 @endpush
 

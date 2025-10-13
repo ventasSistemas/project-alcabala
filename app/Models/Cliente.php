@@ -14,11 +14,12 @@ class Cliente extends Model
         'dni',
         'celular',
     ];
+    /*
 
     public function puestos()
     {
         return $this->hasMany(Puesto::class);
-    }
+    }*/
 
     public function contratos()
     {
@@ -28,5 +29,10 @@ class Cliente extends Model
     public function getNombreCompletoAttribute()
     {
         return strtoupper("{$this->nombres} {$this->apellidos}");
+    }
+
+    public function puestos()
+    {
+        return $this->hasMany(Puesto::class, 'cliente_id');
     }
 }
