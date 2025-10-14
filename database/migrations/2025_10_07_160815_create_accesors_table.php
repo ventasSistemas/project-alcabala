@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('direccion')->nullable();
             $table->string('celular', 9)->nullable();
             $table->string('dni', 8)->unique();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -2,73 +2,87 @@
 
 @section('content')
 <div class="container-fluid">
-    <h4 class="fw-bold mb-4 text-primary">Reportes</h4>
+    <div class="card shadow-sm">
+        <h4 class="fw-bold text-primary mb-0 d-flex align-items-center">
+            <i class="fa-solid fa-chart-simple"></i>Reportes
+        </h4>
+        <div class="card-body">
+            <!-- 🔍 FILTROS -->
+            <form method="GET" action="{{ route('reports.index') }}" class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" value="{{ request('fecha_inicio') }}">
+                </div>
 
-    <form method="GET" action="{{ route('reports.index') }}" class="row g-3 mb-4">
-        <div class="col-md-3">
-            <x-form.select label="Categoría" name="categoria_id" :options="$categorias->pluck('nombre','id')->toArray()" />
-        </div>
-        <div class="col-md-3">
-            <x-form.input label="DNI Cliente" name="dni" type="text" />
-        </div>
-        <div class="col-md-3">
-            <x-form.input label="N° Puesto" name="numero_puesto" type="text" />
-        </div>
-        <div class="col-md-3">
-            <x-form.select label="Accesor" name="accesor_id" :options=$accesores->pluck('nombres_completos','id')->toArray() />
-        </div>
-        <div class="col-md-3">
-            <x-form.input label="Fecha Inicio" name="fecha_inicio" type="date" />
-        </div>
-        <div class="col-md-3">
-            <x-form.input label="Fecha Fin" name="fecha_fin" type="date" />
-        </div>
-        <div class="col-md-3">
-            <x-form.select label="Estado" name="estado" :options="['TODOS'=>'Todos','PAGADO'=>'Pagados','PENDIENTE'=>'Pendientes','RETIRADO'=>'Retirados']" />
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <x-buttons.btn-primary type="submit">Filtrar</x-buttons.btn-primary>
-        </div>
-    </form>
+                <div class="col-md-3">
+                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                    <input type="date" name="fecha_fin" id="fecha_fin" class="form-control" value="{{ request('fecha_fin') }}">
+                </div>
 
-    <div class="mb-3">
-        <a href="{{ route('reports.export', array_merge(request()->all(), ['format'=>'pdf'])) }}" class="btn btn-danger">Exportar PDF</a>
-        <a href="{{ route('reports.export', array_merge(request()->all(), ['format'=>'excel'])) }}" class="btn btn-success">Exportar Excel</a>
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select name="estado" id="estado" class="form-select">
+                        <option value="TODOS">-- Todos --</option>
+                        @foreach ($estados as $estado)
+                            <option value="{{ $estado }}" {{ request('estado') == $estado ? 'selected' : '' }}>
+                                {{ ucfirst(strtolower($estado)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+
+            <!-- 🧾 TABLA DE RESULTADOS -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>#</th>
+                            <th>Número de Pago</th>
+                            <th>Fecha Programada</th>
+                            <th>Fecha de Pago</th>
+                            <th>Monto (S/)</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($pagos as $pago)
+                            <tr>
+                                <td>{{ $loop->iteration + ($pagos->currentPage() - 1) * $pagos->perPage() }}</td>
+                                <td>{{ $pago->numero_pago ?? '—' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($pago->fecha_a_pagar)->format('d/m/Y') }}</td>
+                                <td>{{ $pago->fecha_pago ? \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') : '—' }}</td>
+                                <td>{{ number_format($pago->monto, 2) }}</td>
+                                <td>
+                                    <span class="badge 
+                                        @if($pago->estado === 'PAGADO') bg-success 
+                                        @elseif($pago->estado === 'PAGO ATRASADO') bg-warning 
+                                        @else bg-secondary 
+                                        @endif">
+                                        {{ $pago->estado }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No se encontraron resultados.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 🔁 Paginación -->
+            <div class="d-flex justify-content-end mt-3">
+                {{ $pagos->links() }}
+            </div>
+        </div>
     </div>
-
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Cliente</th>
-                <th>DNI</th>
-                <th>Categoría</th>
-                <th>N° Puesto</th>
-                <th>Monto</th>
-                <th>Estado</th>
-                <th>Accesor</th>
-                <th>Fecha a Pagar</th>
-                <th>Fecha de Pago</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($pagos as $pago)
-            <tr>
-                <td>{{ $pago->contrato->cliente->nombres_completos }}</td>
-                <td>{{ $pago->contrato->cliente->dni }}</td>
-                <td>{{ $pago->contrato->puesto->categoria->nombre }}</td>
-                <td>{{ $pago->contrato->puesto->numero_puesto }}</td>
-                <td>S/ {{ number_format($pago->monto,2) }}</td>
-                <td>{{ $pago->estado }}</td>
-                <td>{{ $pago->accesor->nombres_completos ?? '-' }}</td>
-                <td>{{ $pago->fecha_a_pagar }}</td>
-                <td>{{ $pago->fecha_pago ?? '-' }}</td>
-            </tr>
-            @empty
-            <tr><td colspan="9" class="text-center">No se encontraron pagos</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    {{ $pagos->links() }}
 </div>
 @endsection

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Accesor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AccesorController extends Controller
 {
@@ -21,20 +23,27 @@ class AccesorController extends Controller
             'direccion' => 'nullable|string|max:255',
             'celular' => 'nullable|string|max:9',
             'dni' => 'required|string|size:8|unique:accesors,dni',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6|confirmed', // confirmado con password_confirmation
         ]);
 
-        // Evita crear duplicados exactos (por nombres y dni)
-        $existe = Accesor::where('nombres', $data['nombres'])
-                         ->where('dni', $data['dni'])
-                         ->first();
+        // 🔐 Crear usuario vinculado
+        $user = User::create([
+            'name' => $data['nombres'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
 
-        if ($existe) {
-            return redirect()->back()->with('error', 'El accesor ya existe con esos mismos datos.');
-        }
+        // 👤 Crear accesor vinculado al usuario
+        Accesor::create([
+            'nombres' => $data['nombres'],
+            'direccion' => $data['direccion'],
+            'celular' => $data['celular'],
+            'dni' => $data['dni'],
+            'user_id' => $user->id,
+        ]);
 
-        Accesor::create($data);
-
-        return redirect()->route('accesores.index')->with('success', 'Accesor creado correctamente.');
+        return redirect()->route('accesores.index')->with('success', 'Accesor creado con su usuario correctamente.');
     }
 
     public function update(Request $request, Accesor $accesor)

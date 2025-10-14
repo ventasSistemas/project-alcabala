@@ -108,6 +108,22 @@
                         <label for="dni" class="form-label fw-semibold">DNI</label>
                         <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required placeholder="Ej: 12345678">
                     </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Correo electrónico</label>
+                        <input type="email" name="email" id="email" required autofocus
+                            class="form-control" placeholder="ejemplo@correo.com">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
+                        <input type="password" name="password_confirmation" class="form-control" required>
+                    </div>
                 </div>
 
                 <div class="modal-footer border-0">

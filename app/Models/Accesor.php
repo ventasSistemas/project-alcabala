@@ -14,6 +14,7 @@ class Accesor extends Model
         'direccion',
         'celular',
         'dni',
+        'user_id',
     ];
 
     // Relaciones
@@ -25,5 +26,10 @@ class Accesor extends Model
     public function pagos()
     {
         return $this->hasMany(Pago::class, 'accesor_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

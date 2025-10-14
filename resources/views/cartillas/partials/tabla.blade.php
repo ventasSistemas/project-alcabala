@@ -4,7 +4,7 @@
         Este cliente no tiene cartillas generadas aún.
     </div>
 @else
-    <form id="formPagos" action="{{ route('pagos.store') }}" method="POST">
+    <form id="formPagos" action="{{ route('cartillas.ingresarPagos') }}" method="POST" target="_blank" onsubmit="setTimeout(() => location.reload(), 1500)">
         @csrf
         <div class="table-responsive">
             <table class="table table-bordered table-striped table-hover align-middle shadow-sm mt-3">
@@ -69,14 +69,20 @@
                                         <ul class="dropdown-menu">
                                             @if($cartilla->observacion !== 'Pagado')
                                                 <li>
-                                                    <a href="{{ route('cartillas.cambiarEstado', [$cartilla->id, 'Pagado']) }}" class="dropdown-item text-success">
+                                                    <a href="{{ route('cartillas.cambiarEstado', [$cartilla->id, 'Pagado']) }}" 
+                                                        class="dropdown-item text-success cambiar-estado"
+                                                        target="_blank"
+                                                        onclick="setTimeout(() => location.reload(), 1500)">
                                                         <i class="bi bi-check-circle"></i> Marcar Pagado
                                                     </a>
                                                 </li>
                                             @endif
                                             @if($cartilla->observacion === 'Pendiente')
                                                 <li>
-                                                    <a href="{{ route('cartillas.cambiarEstado', [$cartilla->id, 'Pago Atrasado']) }}" class="dropdown-item text-danger">
+                                                    <a href="{{ route('cartillas.cambiarEstado', [$cartilla->id, 'Pago Atrasado']) }}" 
+                                                        class="dropdown-item text-danger cambiar-estado"
+                                                        target="_blank"
+                                                        onclick="setTimeout(() => location.reload(), 1500)">
                                                         <i class="bi bi-clock-history"></i> Pago Atrasado
                                                     </a>
                                                 </li>
@@ -116,5 +122,6 @@
             const checks = document.querySelectorAll('.checkPago');
             checks.forEach(ch => ch.checked = this.checked);
         });
+        
     </script>
 @endif

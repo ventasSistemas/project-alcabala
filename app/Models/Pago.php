@@ -10,15 +10,14 @@ class Pago extends Model
     use HasFactory;
 
     protected $fillable = [
-        'contrato_id',
-        'accesor_id',
+        'numero_pago',
         'fecha_pago',
         'fecha_a_pagar',
         'monto',
         'estado',
-        'observacion',
     ];
 
+    /*
     public function contrato()
     {
         return $this->belongsTo(Contrato::class);
@@ -35,5 +34,5 @@ class Pago extends Model
         return $this->estado === 'PAGADO'
             ? '<span class="badge bg-success">Pagado</span>'
             : '<span class="badge bg-warning text-dark">Pendiente</span>';
-    }
+    }*/
 }

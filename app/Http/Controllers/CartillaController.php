@@ -7,6 +7,12 @@ use App\Models\Puesto;
 use App\Models\Cliente;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Pago;
+use Illuminate\Support\Facades\DB;
+use App\Notifications\PagoRealizadoNotification;
+use Illuminate\Support\Facades\Notification;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CartillaController extends Controller
 {
@@ -115,19 +121,60 @@ class CartillaController extends Controller
             return back()->with('error', 'Estado no válido.');
         }
 
-        // Si ya está pagado o atrasado, no se puede cambiar
+        // Evitar modificar pagos ya cerrados
         if (in_array($cartilla->observacion, ['Pagado', 'Pago Atrasado'])) {
             return back()->with('warning', 'No se puede modificar un pago Pagado o Pago Atrasado.');
         }
 
-        // Si está "No Pago" solo puede ir a "Pago Atrasado"
-        if ($cartilla->observacion === 'No Pago' && $estado !== 'Pago Atrasado') {
-            return back()->with('warning', 'Un estado "No Pago" solo puede cambiar a "Pago Atrasado".');
+        DB::beginTransaction();
+        try {
+            // ✅ Si es Pagado o Pago Atrasado → generar registro de pago
+            if (in_array($estado, ['Pagado', 'Pago Atrasado'])) {
+                // Obtener el último número correlativo
+                $ultimo = Pago::select(DB::raw('MAX(CAST(SUBSTRING(numero_pago, 3) AS UNSIGNED)) as max_num'))
+                    ->value('max_num');
+                $numeroPago = $this->generarNumeroPago($ultimo);
+
+                // Crear registro del pago
+                $pago = Pago::create([
+                    'numero_pago' => $numeroPago,
+                    'fecha_pago' => now(),
+                    'fecha_a_pagar' => $cartilla->fecha_pagar,
+                    'monto' => $cartilla->cuota,
+                    'estado' => 'PAGADO',
+                ]);
+
+                // Notificar al usuario (opcionalmente a todos los admins)
+                //$usuarios = User::where('role', 'admin')->get(); // ajusta si tu modelo usa 'rol' o 'tipo'
+                //Notification::send($usuarios, new PagoRealizadoNotification($pago));
+
+                // Si quieres que también se notifique al usuario autenticado:
+                if (auth()->check()) {
+                    auth()->user()->notify(new PagoRealizadoNotification($pago));
+                }
+
+                // Actualizar la cartilla con el nuevo estado
+                $cartilla->update(['observacion' => $estado]);
+
+                DB::commit();
+
+                // Generar el ticket
+                return redirect()->route('cartillas.ticket', [
+                    'cartillas' => $cartilla->id,
+                    'pago' => $pago->id
+                ]);
+            }
+
+            // Si no es un pago, solo actualiza el estado normal
+            $cartilla->update(['observacion' => $estado]);
+            DB::commit();
+
+            return back()->with('success', "Estado actualizado a '{$estado}' correctamente.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
         }
-
-        $cartilla->update(['observacion' => $estado]);
-
-        return back()->with('success', "Estado actualizado a '{$estado}' correctamente.");
     }
 
     /**
@@ -142,15 +189,102 @@ class CartillaController extends Controller
     }
 
     public function ingresarPagos(Request $request)
-{
-    $ids = $request->input('cartillas', []);
-    if (empty($ids)) {
-        return back()->with('error', 'No seleccionaste ninguna cartilla.');
+    {
+        $ids = $request->input('cartillas_id', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'No seleccionaste ninguna cartilla.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // ✅ Obtener el último número correlativo real
+            $ultimo = Pago::select(DB::raw('MAX(CAST(SUBSTRING(numero_pago, 3) AS UNSIGNED)) as max_num'))
+                        ->value('max_num');
+            $numeroPago = $this->generarNumeroPago($ultimo);
+
+            // Calcular el monto total
+            $montoTotal = Cartilla::whereIn('id', $ids)->sum('cuota');
+
+            // Crear registro del pago
+            $pago = Pago::create([
+                'numero_pago' => $numeroPago,
+                'fecha_pago' => now(),
+                'fecha_a_pagar' => now(),
+                'monto' => $montoTotal,
+                'estado' => 'PAGADO',
+            ]);
+
+            // Marcar las cartillas como pagadas
+            Cartilla::whereIn('id', $ids)->update(['observacion' => 'Pagado']);
+
+            // 🔔 Enviar notificación del pago múltiple
+            if (auth()->check()) {
+                auth()->user()->notify(new PagoRealizadoNotification($pago));
+            }
+
+            DB::commit();
+
+            // Redirigir al ticket
+            return redirect()->route('cartillas.ticket', [
+                'cartillas' => implode(',', $ids),
+                'pago' => $pago->id
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al registrar el pago: ' . $e->getMessage());
+        }
     }
 
-    Cartilla::whereIn('id', $ids)->update(['observacion' => 'Pagado']);
 
-    return back()->with('success', 'Pagos marcados como pagados correctamente.');
-}
+    /**
+     * Genera un número correlativo tipo P-00001, P-00002...
+     */
+    private function generarNumeroPago($ultimo)
+    {
+        if (!$ultimo) {
+            return 'P-00001';
+        }
+
+        $num = (int) filter_var($ultimo, FILTER_SANITIZE_NUMBER_INT);
+        $nuevo = $num + 1;
+
+        return 'P-' . str_pad($nuevo, 5, '0', STR_PAD_LEFT);
+    }
+
+
+    public function generarTicket($cartillaIds, Request $request)
+    {
+        $ids = explode(',', $cartillaIds);
+        $pagoId = $request->query('pago');
+
+        $cartillas = Cartilla::with(['cliente', 'puesto'])
+            ->whereIn('id', $ids)
+            ->get();
+
+        if ($cartillas->isEmpty()) {
+            return back()->with('error', 'No hay cartillas seleccionadas.');
+        }
+
+        $cliente = $cartillas->first()->cliente;
+        $puestos = $cartillas->pluck('puesto.numero_puesto')->unique();
+        $totalPago = $cartillas->sum('cuota');
+        $fecha = now()->format('d/m/Y H:i');
+
+        $pago = Pago::find($pagoId);
+        $numeroPago = $pago ? $pago->numero_pago : '---';
+
+        // 🔹 Calcular alto del PDF dinámicamente
+        // base: 250 (altura mínima) + 15 px adicionales por cada cartilla
+        $alturaBase = 250; 
+        $incrementoPorFila = 15; 
+        $altura = $alturaBase + ($cartillas->count() * $incrementoPorFila);
+
+        $pdf = Pdf::loadView('cartillas.ticket', compact('cartillas', 'cliente', 'puestos', 'totalPago', 'fecha', 'numeroPago'))
+            ->setPaper([0, 0, 226.77, $altura], 'portrait');
+
+        return $pdf->stream("ticket_pago_{$numeroPago}.pdf");
+    }
 
 }
