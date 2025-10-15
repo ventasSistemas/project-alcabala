@@ -5,7 +5,7 @@
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold text-primary mb-0 d-flex align-items-center">
-            <i class="fa-solid fa-laptop-file"></i>Historial de Pagos
+            <i class="fa-solid fa-laptop-file"></i>Historial de Pagos/Caja
         </h4>
     </div>
 
@@ -23,10 +23,9 @@
                         <th>#</th>
                         <th>Número de Pago</th>
                         <th>Fecha del Pago</th>
-                        <th>Fecha Programada</th>
+                        <th>Fecha Programada</th>  
                         <th>Monto (S/)</th>
                         <th>Estado</th>
-                        <!--<th>Ticket</th>-->
                     </tr>
                 </thead>
                 <tbody>
@@ -44,14 +43,6 @@
                                     <span class="badge bg-danger">{{ $pago->estado }}</span>
                                 @endif
                             </td>
-                            <!--
-                            <td>
-                                <a href="{{ route('cartillas.ticket', ['cartillas' => 0, 'pago' => $pago->id]) }}" 
-                                   target="_blank" 
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-file-earmark-pdf"></i> Ver Ticket
-                                </a>
-                            </td>-->
                         </tr>
                     @endforeach
                 </tbody>

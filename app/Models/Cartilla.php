@@ -31,7 +31,7 @@ class Cartilla extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-    // ✅ Formato de fecha legible
+    // Formato de fecha legible
     protected $casts = [
         'fecha_pagar' => 'date:Y-m-d',
     ];

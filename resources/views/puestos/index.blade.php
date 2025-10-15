@@ -1,100 +1,165 @@
+<!--views/puestos/index.blade.php-->
 @extends('layouts.app')
 
 @section('content')
 <div class="container-fluid px-4">
-    <!-- Título -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold text-primary mb-0 d-flex align-items-center">
-            <i class="fas fa-store-alt me-2"></i> Gestión de Puestos
-        </h4>
-        <button class="btn btn-primary rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPuesto">
-            <i class="fas fa-plus-circle me-1"></i> Nuevo Puesto
-        </button>
-    </div>
+{{-- Si NO hay categoría seleccionada: mostrar las categorías --}}
+    @if (!isset($puestos))
+        <div class="mb-4">
+            <h4 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                <i class="fas fa-layer-group me-2"></i> Categorías de Establecimientos
+            </h4>
+            <p class="text-muted">Selecciona una categoría para ver sus puestos.</p>
+        </div>
 
-    <!-- Tabla -->
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table align-middle table-hover mb-0">
-                    <thead class="table-light text-center">
-                        <tr>
-                            <th>#</th>
-                            <th>N° de Puesto</th>
-                            <th>Categoría</th>
-                            <th>Disponible</th>
-                            <th>Cliente</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($puestos as $index => $puesto)
-                            <tr class="text-center">
-                                <td>{{ $index + 1 }}</td>
-                                <td class="fw-semibold">{{ $puesto->numero_puesto }}</td>
-                                <td>{{ $puesto->categoria->nombre ?? '-' }}</td>
-                                <td>
-                                    @if ($puesto->disponible)
-                                        <span class="badge bg-success">Disponible</span>
-                                    @else
-                                        <span class="badge bg-danger">Ocupado</span>
-                                    @endif
-                                </td>
-                                <td>{{ $puesto->cliente->nombres ?? '-' }}</td>
-                                <td>
-                                    @if($puesto->cliente)
-                                        <button class="btn btn-sm btn-outline-info me-1 btn-ver-contrato" 
-                                            data-puesto-id="{{ $puesto->id }}">
-                                            <i class="fas fa-file-contract"></i>
-                                        </button>
-                                    @endif
-                                    <button class="btn btn-sm btn-outline-warning me-1 btn-editar-puesto" 
-                                        data-id="{{ $puesto->id }}"
-                                        data-numero="{{ $puesto->numero_puesto }}"
-                                        data-categoria="{{ $puesto->categoria_id }}"
-                                        data-disponible="{{ $puesto->disponible }}"
-                                        data-cliente-id="{{ $puesto->cliente->id ?? '' }}"
-                                        data-cliente-nombre="{{ $puesto->cliente ? $puesto->cliente->nombres.' '.$puesto->cliente->apellidos : '' }}"
-                                        data-servicios="{{ json_encode($puesto->servicios ?? []) }}"
-                                        data-observaciones="{{ $puesto->observaciones ?? '' }}"
-                                        data-hora-apertura="{{ $puesto->hora_apertura ?? '' }}"
-                                        data-hora-cierre="{{ $puesto->hora_cierre ?? '' }}"
-                                        data-fecha-inicio="{{ $puesto->fecha_inicio ?? '' }}"
-                                        data-fecha-fin="{{ $puesto->fecha_fin ?? '' }}"
-                                        data-primer-pago-fecha="{{ $puesto->primer_pago_fecha ?? '' }}"
-                                        data-primer-pago-monto="{{ $puesto->primer_pago_monto ?? '' }}"
-                                        data-modo-pago="{{ $puesto->modo_pago ?? '' }}"
-                                        data-accesor-cobro="{{ $puesto->accesor_cobro ?? '' }}"
-                                        data-imagen="{{ $puesto->imagen_puesto ?? '' }}"
-                                    >
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+        <div class="row g-4">
+            @forelse ($categorias as $categoria)
+                <div class="col-md-4 col-lg-3">
+                    <div class="card shadow-sm border-0 h-100 hover-shadow rounded-4">
+                        @if($categoria->imagen_lugar)
+                            <img src="{{ asset('storage/'.$categoria->imagen_lugar) }}" 
+                                 class="card-img-top rounded-top-4" 
+                                 alt="{{ $categoria->nombre }}" 
+                                 style="height:160px; object-fit:cover;">
+                        @else
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded-top-4" style="height:160px;">
+                                <i class="fas fa-store fa-3x text-secondary"></i>
+                            </div>
+                        @endif
 
-                                    <form action="{{ route('puestos.destroy', $puesto->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar este puesto?')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-3">
-                                    <i class="fas fa-box-open fa-2x mb-2"></i><br>No hay puestos registrados.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-3">
-                {{ $puestos->links() }}
+                        <div class="card-body text-center">
+                            <h6 class="fw-bold text-primary">{{ $categoria->nombre }}</h6>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {{ $categoria->direccion ?? 'Sin dirección' }}
+                            </p>
+                            <span class="badge bg-info text-dark mb-2">
+                                {{ $categoria->puestos_count }} Puestos
+                            </span>
+                            <div>
+                                <a href="{{ route('puestos.index', ['categoria_id' => $categoria->id]) }}" 
+                                   class="btn btn-outline-primary btn-sm rounded-3">
+                                    <i class="fas fa-eye me-1"></i> Ver Puestos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-12 text-center text-muted">
+                    <i class="fas fa-folder-open fa-2x mb-2"></i><br>
+                    No hay categorías registradas.
+                </div>
+            @endforelse
+        </div>
+
+    {{-- Si HAY categoría seleccionada: mostrar los puestos --}}
+    @else
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-primary mb-0 d-flex align-items-center">
+                <i class="fas fa-store-alt me-2"></i> Puestos - {{ $categoria->nombre }}
+            </h4>
+
+            <div class="d-flex gap-2">
+                <a href="{{ route('puestos.index') }}" class="btn btn-outline-secondary rounded-3 shadow-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Volver
+                </a>
+
+                @if(!auth()->user()->accesor)
+                    <button class="btn btn-primary rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPuesto">
+                        <i class="fas fa-plus-circle me-1"></i> Nuevo Puesto
+                    </button>
+                @endif
             </div>
         </div>
-    </div>
-</div>
+
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th>#</th>
+                                <th>N° de Puesto</th>
+                                <th>Disponible</th>
+                                <th>Cliente</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($puestos as $index => $puesto)
+                                <tr class="text-center">
+                                    <td>{{ $index + 1 }}</td>
+                                    <td class="fw-semibold">{{ $puesto->numero_puesto }}</td>
+                                    <td>
+                                        @if ($puesto->disponible)
+                                            <span class="badge bg-success">Disponible</span>
+                                        @else
+                                            <span class="badge bg-danger">Ocupado</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $puesto->cliente->nombres ?? '-' }}</td>
+                                    <td>
+                                        @if($puesto->cliente && $puesto->cliente->puestos->flatMap->cartillas->count() > 0)
+                                            <button 
+                                                class="btn btn-sm btn-outline-info ms-1 btnVerCartilla"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalCartilla"
+                                                data-cliente="{{ $puesto->cliente->id }}"
+                                            >
+                                                <i class="fas fa-file-invoice-dollar me-1"></i> Ver Cartilla
+                                            </button>
+                                        @endif
+
+                                        @if(!auth()->user()->accesor)
+                                            <button class="btn btn-sm btn-outline-warning me-1 btn-editar-puesto" 
+                                                data-id="{{ $puesto->id }}"
+                                                data-numero="{{ $puesto->numero_puesto }}"
+                                                data-categoria="{{ $puesto->categoria_id }}"
+                                                data-disponible="{{ $puesto->disponible }}"
+                                                data-cliente-id="{{ $puesto->cliente->id ?? '' }}"
+                                                data-cliente-nombre="{{ $puesto->cliente ? $puesto->cliente->nombres.' '.$puesto->cliente->apellidos : '' }}"
+                                                data-servicios="{{ json_encode($puesto->servicios ?? []) }}"
+                                                data-observaciones="{{ $puesto->observaciones ?? '' }}"
+                                                data-hora-apertura="{{ $puesto->hora_apertura ?? '' }}"
+                                                data-hora-cierre="{{ $puesto->hora_cierre ?? '' }}"
+                                                data-fecha-inicio="{{ $puesto->fecha_inicio ?? '' }}"
+                                                data-fecha-fin="{{ $puesto->fecha_fin ?? '' }}"
+                                                data-primer-pago-fecha="{{ $puesto->primer_pago_fecha ?? '' }}"
+                                                data-primer-pago-monto="{{ $puesto->primer_pago_monto ?? '' }}"
+                                                data-modo-pago="{{ $puesto->modo_pago ?? '' }}"
+                                                data-accesor-cobro="{{ $puesto->accesor_cobro ?? '' }}"
+                                                data-imagen="{{ $puesto->imagen_puesto ?? '' }}"
+                                            >
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+
+                                            <form action="{{ route('puestos.destroy', $puesto->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar este puesto?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-3">
+                                        <i class="fas fa-box-open fa-2x mb-2"></i><br>No hay puestos registrados.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    {{ $puestos->links() }}
+                </div>
+            </div>
+        </div>
+    @endif
 
 <!-- MODAL: Crear/Editar Puesto -->
 <div class="modal fade" id="modalPuesto" tabindex="-1" aria-hidden="true">
@@ -261,11 +326,40 @@
                                     <input type="text" id="pago_inscripcion_anual" class="form-control">
                                 </div>
 
-                                <!--
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Accesor a Cargo</label>
-                                    <input type="text" class="form-control" id="accesor_cobro" name="accesor_cobro" placeholder="Nombre del accesor a cargo...">
-                                </div>-->
+                                <!-- 👥 Asignar Accesores -->
+                                <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-primary border-bottom pb-1">Accesor Asignado</h6>
+                                </div>
+
+                                <div class="col-12 mb-2">
+                                <label class="fw-semibold">Buscar Accesor</label>
+                                <input 
+                                    type="text" 
+                                    id="buscarAccesorPuesto" 
+                                    class="form-control" 
+                                    placeholder="Escribe nombre o DNI para buscar...">
+                                <div id="resultadosBusquedaPuesto" class="list-group mt-2 d-none"></div>
+                                </div>
+
+                                <div class="col-12 mt-3">
+                                <label class="fw-semibold">Accesores Seleccionados</label>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0" id="tablaAccesoresSeleccionadosPuesto">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>DNI</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                </div>
+
+                                <!-- Campo oculto donde se guardan los IDs -->
+                                <input type="hidden" name="accesores[]" id="accesor_id_puesto">
+
                             </div>
                         </div>
                     </div>
@@ -279,10 +373,43 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Cartilla del Cliente -->
+<div class="modal fade" id="modalCartilla" tabindex="-1" aria-labelledby="modalCartillaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalCartillaLabel">Cartilla de Pagos del Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="tablaCartilla">
+                <div class="text-center text-muted py-5">Selecciona un cliente para ver su cartilla...</div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+
+//Abrir modal de Cartillas
+document.querySelectorAll('.btnVerCartilla').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const clienteId = btn.dataset.cliente;
+        const tablaCartilla = document.getElementById('tablaCartilla');
+        tablaCartilla.innerHTML = '<div class="text-center text-muted py-5">Cargando información...</div>';
+
+        try {
+            const response = await fetch(`/clientes/${clienteId}/cartillas`);
+            const html = await response.text();
+            tablaCartilla.innerHTML = html;
+        } catch (error) {
+            tablaCartilla.innerHTML = '<div class="text-center text-danger py-5">Error al cargar la cartilla.</div>';
+            console.error('Error al cargar cartillas:', error);
+        }
+    });
+});
 
 // --- Manejo temporal del cliente asignado (guardado en localStorage) ---
 function guardarClienteTemporal(cliente) {
@@ -692,6 +819,92 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     observer.observe(contenedorContrato, { attributes: true, attributeFilter: ['class'] });
 });
+
+
+// --- Búsqueda y selección de accesores en Puestos ---
+const inputBuscarPuesto = document.getElementById('buscarAccesorPuesto');
+const resultadosDivPuesto = document.getElementById('resultadosBusquedaPuesto');
+const tablaAccesoresPuesto = document.getElementById('tablaAccesoresSeleccionadosPuesto').querySelector('tbody');
+const inputIdsPuesto = document.getElementById('accesor_id_puesto');
+
+// Accesores disponibles desde backend
+const accesoresPuesto = @json($accesors); // Usa la misma variable que ya pasas desde tu controlador
+
+// Buscar accesores por nombre o DNI
+inputBuscarPuesto.addEventListener('keyup', () => {
+  const texto = inputBuscarPuesto.value.toLowerCase().trim();
+  resultadosDivPuesto.innerHTML = '';
+
+  if (texto.length < 2) {
+    resultadosDivPuesto.classList.add('d-none');
+    return;
+  }
+
+  const resultados = accesoresPuesto.filter(a =>
+    a.nombres.toLowerCase().includes(texto) || a.dni.includes(texto)
+  );
+
+  if (resultados.length === 0) {
+    resultadosDivPuesto.innerHTML = '<div class="list-group-item text-muted">No se encontraron resultados.</div>';
+  } else {
+    resultados.forEach(a => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'list-group-item list-group-item-action';
+      item.textContent = `${a.nombres} — DNI: ${a.dni}`;
+      item.onclick = () => seleccionarAccesorPuesto(a);
+      resultadosDivPuesto.appendChild(item);
+    });
+  }
+
+  resultadosDivPuesto.classList.remove('d-none');
+});
+
+// Seleccionar un accesor
+function seleccionarAccesorPuesto(accesor) {
+  resultadosDivPuesto.classList.add('d-none');
+  inputBuscarPuesto.value = '';
+
+  if (document.querySelector(`#fila-puesto-${accesor.id}`)) return;
+
+  const fila = document.createElement('tr');
+  fila.id = `fila-puesto-${accesor.id}`;
+  fila.innerHTML = `
+    <td>${accesor.nombres}</td>
+    <td>${accesor.dni}</td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarAccesorPuesto(${accesor.id})">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  `;
+  tablaAccesoresPuesto.appendChild(fila);
+
+  actualizarInputIdsPuesto();
+}
+
+function eliminarAccesorPuesto(id) {
+  document.querySelector(`#fila-puesto-${id}`)?.remove();
+  actualizarInputIdsPuesto();
+}
+
+function actualizarInputIdsPuesto() {
+  const ids = Array.from(tablaAccesoresPuesto.querySelectorAll('tr')).map(fila =>
+    parseInt(fila.id.replace('fila-puesto-', ''))
+  );
+
+  // Limpiar inputs anteriores
+  document.querySelectorAll('input[name="accesores[]"]').forEach(el => el.remove());
+
+  // Crear un input oculto por cada accesor seleccionado
+  ids.forEach(id => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'accesores[]';
+    input.value = id;
+    document.getElementById('formPuesto').appendChild(input);
+  });
+}
 
 </script>
 @endpush

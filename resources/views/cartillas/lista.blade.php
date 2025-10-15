@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container">
-    <h4 class="mb-3">📋 Lista de Cartillas</h4>
+    <h4 class="mb-3">Lista de Cartillas</h4>
 
     @if($cartillas->isEmpty())
         <div class="alert alert-info">No hay cartillas registradas.</div>

@@ -15,24 +15,11 @@ class Pago extends Model
         'fecha_a_pagar',
         'monto',
         'estado',
+        'cartilla_id'
     ];
 
-    /*
-    public function contrato()
+    public function cartilla()
     {
-        return $this->belongsTo(Contrato::class);
+        return $this->belongsTo(Cartilla::class);
     }
-
-    public function accesor()
-    {
-        return $this->belongsTo(Accesor::class);
-    }
-
-    // Accessor ejemplo para estado con color
-    public function getEstadoBadgeAttribute()
-    {
-        return $this->estado === 'PAGADO'
-            ? '<span class="badge bg-success">Pagado</span>'
-            : '<span class="badge bg-warning text-dark">Pendiente</span>';
-    }*/
 }

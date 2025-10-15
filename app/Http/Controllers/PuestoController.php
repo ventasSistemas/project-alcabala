@@ -7,6 +7,7 @@ use App\Models\CategoriaEstablecimiento;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Models\Cartilla;
+use App\Models\Accesor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -14,26 +15,78 @@ class PuestoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Puesto::with(['categoria', 'cliente']);
+        $user = auth()->user();
+        $accesor = $user->accesor;
+        $accesors = Accesor::select('id', 'nombres', 'dni')->orderBy('nombres')->get();
 
-        // Filtros opcionales
-        if ($request->filled('categoria_id')) {
-            $query->where('categoria_id', $request->categoria_id);
+        /**
+         * CASO 1: Si el usuario autenticado es un ACCESOR
+         */
+        if ($accesor) {
+            // Categorías con puestos del accesor
+            $categorias = CategoriaEstablecimiento::whereHas('puestos.accesores', function ($q) use ($accesor) {
+                $q->where('accesor_id', $accesor->id);
+            })
+            ->withCount(['puestos as puestos_count' => function ($q) use ($accesor) {
+                $q->whereHas('accesores', function ($q2) use ($accesor) {
+                    $q2->where('accesor_id', $accesor->id);
+                });
+            }])
+            ->orderBy('nombre')
+            ->get();
+
+            // Si no hay categoría seleccionada → solo mostrar las categorías
+            if (!$request->filled('categoria_id')) {
+                return view('puestos.index', compact('categorias', 'accesors'));
+            }
+
+            // Si hay categoría seleccionada → mostrar puestos asignados al accesor
+            $categoria = CategoriaEstablecimiento::findOrFail($request->categoria_id);
+
+            $puestos = Puesto::with(['categoria', 'cliente', 'cliente.puestos.cartillas'])
+                ->where('categoria_id', $categoria->id)
+                ->whereHas('accesores', function ($q) use ($accesor) {
+                    $q->where('accesor_id', $accesor->id);
+                })
+                ->orderBy('numero_puesto')
+                ->paginate(15);
+
+            // Cargar cartillas de los clientes relacionados a los puestos
+            $puestosCartillas = Cartilla::whereIn('cliente_id', $puestos->pluck('cliente_id')->filter())->get();
+
+            return view('puestos.index', compact('puestos', 'categoria', 'categorias', 'accesors', 'puestosCartillas'));
         }
+
+        /**
+         * CASO 2: Si el usuario es ADMIN o USER normal
+         */
+        $categorias = CategoriaEstablecimiento::withCount('puestos')->orderBy('nombre')->get();
+
+        // Si no hay categoría seleccionada
+        if (!$request->filled('categoria_id')) {
+            return view('puestos.index', compact('categorias', 'accesors'));
+        }
+
+        // Si hay categoría seleccionada → mostrar puestos con clientes y cartillas
+        $categoria = CategoriaEstablecimiento::findOrFail($request->categoria_id);
+
+        $query = Puesto::with(['categoria', 'cliente', 'cliente.puestos.cartillas'])
+            ->where('categoria_id', $categoria->id);
+
+        // Filtros
         if ($request->filled('disponible')) {
             $query->where('disponible', (bool) $request->disponible);
         }
-        if ($request->filled('cliente_dni')) {
-            $query->whereHas('cliente', fn($q) => $q->where('dni', $request->cliente_dni));
-        }
+
         if ($request->filled('numero_puesto')) {
             $query->where('numero_puesto', 'like', "%{$request->numero_puesto}%");
         }
 
         $puestos = $query->orderBy('numero_puesto')->paginate(15);
-        $categorias = CategoriaEstablecimiento::orderBy('nombre')->get();
 
-        return view('puestos.index', compact('puestos', 'categorias'));
+        $puestosCartillas = Cartilla::whereIn('cliente_id', $puestos->pluck('cliente_id')->filter())->get();
+
+        return view('puestos.index', compact('puestos', 'categoria', 'categorias', 'accesors', 'puestosCartillas'));
     }
 
     public function create()
@@ -45,6 +98,9 @@ class PuestoController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->user()->accesor) {
+            abort(403, 'No tienes permiso para crear puestos.');
+        }
         $data = $request->validate([
             'categoria_id' => 'required|exists:categoria_establecimientos,id',
             'numero_puesto' => 'required|string|max:255|unique:puestos,numero_puesto',
@@ -60,8 +116,6 @@ class PuestoController extends Controller
             'hora_apertura' => 'nullable|date_format:H:i',
             'hora_cierre' => 'nullable|date_format:H:i',
             'primer_pago_fecha' => 'nullable|date',
-            //'primer_pago_monto' => 'nullable|numeric|min:0',
-            //'modo_pago' => 'nullable|in:SEMANAL,MENSUAL,ANUAL',
             'accesor_cobro' => 'nullable|string|max:255',
 
             // Cliente temporal (enviado desde JS)
@@ -71,7 +125,7 @@ class PuestoController extends Controller
             'cliente_temp.celular' => 'nullable|string|max:20',
         ]);
 
-        // ✅ Guardar imagen si se sube en public/images/puestos
+        // Guardar imagen si se sube en public/images/puestos
         if ($request->hasFile('imagen_puesto')) {
             $imagen = $request->file('imagen_puesto');
             $nombreArchivo = time() . '_' . $imagen->getClientOriginalName();
@@ -109,11 +163,16 @@ class PuestoController extends Controller
             // --- Crear el puesto ---
             $puesto = Puesto::create($data);
 
+            // Vincular los accesores seleccionados
+            if ($request->filled('accesores')) {
+                $puesto->accesores()->sync($request->accesores);
+            }
+
             // --- Vincular cliente (si hay) ---
             if (!empty($data['cliente_id'])) {
                 $puesto->update(['disponible' => false]);
 
-                // ✅ Crear automáticamente cartillas de los jueves usando el pago de la categoría
+                // Crear automáticamente cartillas de los jueves usando el pago de la categoría
                 if ($puesto->fecha_inicio && $puesto->fecha_fin) {
                     $fechaInicio = Carbon::parse($puesto->fecha_inicio);
                     $fechaFin = Carbon::parse($puesto->fecha_fin);
@@ -139,7 +198,7 @@ class PuestoController extends Controller
                             ]);
                         }
 
-                        $fechaActual->addDay(); // avanzar un día
+                        $fechaActual->addDay(); 
                     }
                 }
 
@@ -151,6 +210,9 @@ class PuestoController extends Controller
 
     public function edit(Puesto $puesto)
     {
+        if (auth()->user()->accesor) {
+            abort(403, 'No tienes permiso para eliminar puestos.');
+        }
         $categorias = CategoriaEstablecimiento::orderBy('nombre')->get();
         $clientes = Cliente::orderBy('nombres')->get();
         return view('puestos.edit', compact('puesto', 'categorias', 'clientes'));
@@ -158,6 +220,9 @@ class PuestoController extends Controller
 
     public function update(Request $request, Puesto $puesto)
     {
+        if (auth()->user()->accesor) {
+            abort(403, 'No tienes permiso para eliminar puestos.');
+        }
         $data = $request->validate([
             'categoria_id' => 'required|exists:categoria_establecimientos,id',
             'numero_puesto' => 'required|string|max:255|unique:puestos,numero_puesto,' . $puesto->id,
@@ -173,8 +238,6 @@ class PuestoController extends Controller
             'hora_apertura' => 'nullable|date_format:H:i',
             'hora_cierre' => 'nullable|date_format:H:i',
             'primer_pago_fecha' => 'nullable|date',
-            //'primer_pago_monto' => 'nullable|numeric|min:0',
-            //'modo_pago' => 'nullable|in:SEMANAL,MENSUAL,ANUAL',
             'accesor_cobro' => 'nullable|string|max:255',
         ]);
 
@@ -211,6 +274,9 @@ class PuestoController extends Controller
 
     public function destroy(Puesto $puesto)
     {
+        if (auth()->user()->accesor) {
+            abort(403, 'No tienes permiso para eliminar puestos.');
+        }
         $puesto->delete();
         return redirect()->route('puestos.index')->with('success', 'Puesto eliminado correctamente.');
     }
@@ -309,7 +375,7 @@ class PuestoController extends Controller
         $nro = 1;
         $fechaActual = $fechaInicio->copy();
 
-        // 🔹 Recorremos todas las fechas dentro del rango
+        // Recorremos todas las fechas dentro del rango
         while ($fechaActual->lte($fechaFin)) {
             // Solo consideramos los jueves
             if ($fechaActual->isThursday()) {
@@ -321,7 +387,7 @@ class PuestoController extends Controller
                 ];
             }
 
-            // 🔹 Avanzamos según el modo de pago
+            // Avanzamos según el modo de pago
             if ($modoPago === 'SEMANAL') {
                 $fechaActual->addWeek();
             } elseif ($modoPago === 'MENSUAL') {

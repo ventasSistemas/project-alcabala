@@ -17,6 +17,11 @@ class Accesor extends Model
         'user_id',
     ];
 
+    public function puestos()
+    {
+        return $this->belongsToMany(Puesto::class, 'accesor_puesto');
+    }
+
     // Relaciones
     public function categorias()
     {

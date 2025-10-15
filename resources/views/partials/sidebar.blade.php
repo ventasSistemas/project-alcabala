@@ -19,7 +19,7 @@
                 <a href="{{ route('clientes.index') }}" class="nav-link"><i class="fas fa-users me-2"></i> Clientes y Pagos</a>
             </li>
             <li>
-                <a href="{{ route('pagos.index') }}" class="nav-link"><i class="fas fa-credit-card me-2"></i> Historial de Pagos</a>
+                <a href="{{ route('pagos.index') }}" class="nav-link"><i class="fas fa-credit-card me-2"></i> Historial de Pagos/Caja</a>
             </li>
         @else
             {{-- Usuarios normales, todo --}}
@@ -30,7 +30,7 @@
             <li><a href="{{ route('categorias.index') }}" class="nav-link"><i class="fas fa-tags me-2"></i> Categorías</a></li>
             <li><a href="{{ route('puestos.index') }}" class="nav-link"><i class="fas fa-store me-2"></i> Puestos</a></li>
             <li><a href="{{ route('clientes.index') }}" class="nav-link"><i class="fas fa-users me-2"></i> Clientes y Pagos</a></li>
-            <li><a href="{{ route('pagos.index') }}" class="nav-link"><i class="fas fa-credit-card me-2"></i> Historial de Pagos</a></li>
+            <li><a href="{{ route('pagos.index') }}" class="nav-link"><i class="fas fa-credit-card me-2"></i> Historial de Pagos/Caja</a></li>
             <li><a href="{{ route('reports.index') }}" class="nav-link"><i class="fa-solid fa-chart-simple"></i> Reportes</a></li>
         @endif
     </ul>

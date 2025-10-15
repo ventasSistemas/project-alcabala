@@ -128,7 +128,7 @@ class CartillaController extends Controller
 
         DB::beginTransaction();
         try {
-            // ✅ Si es Pagado o Pago Atrasado → generar registro de pago
+            // Si es Pagado o Pago Atrasado → generar registro de pago
             if (in_array($estado, ['Pagado', 'Pago Atrasado'])) {
                 // Obtener el último número correlativo
                 $ultimo = Pago::select(DB::raw('MAX(CAST(SUBSTRING(numero_pago, 3) AS UNSIGNED)) as max_num'))
@@ -142,6 +142,7 @@ class CartillaController extends Controller
                     'fecha_a_pagar' => $cartilla->fecha_pagar,
                     'monto' => $cartilla->cuota,
                     'estado' => 'PAGADO',
+                    'cartilla_id' => $cartilla->id,
                 ]);
 
                 // Notificar al usuario (opcionalmente a todos los admins)
@@ -198,7 +199,7 @@ class CartillaController extends Controller
 
         DB::beginTransaction();
         try {
-            // ✅ Obtener el último número correlativo real
+            // Obtener el último número correlativo real
             $ultimo = Pago::select(DB::raw('MAX(CAST(SUBSTRING(numero_pago, 3) AS UNSIGNED)) as max_num'))
                         ->value('max_num');
             $numeroPago = $this->generarNumeroPago($ultimo);
@@ -275,7 +276,7 @@ class CartillaController extends Controller
         $pago = Pago::find($pagoId);
         $numeroPago = $pago ? $pago->numero_pago : '---';
 
-        // 🔹 Calcular alto del PDF dinámicamente
+        // Calcular alto del PDF dinámicamente
         // base: 250 (altura mínima) + 15 px adicionales por cada cartilla
         $alturaBase = 250; 
         $incrementoPorFila = 15; 

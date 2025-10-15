@@ -84,7 +84,7 @@ Route::middleware('auth')->group(function () {
         $notificacion = auth()->user()->notifications()->find($id);
 
         if ($notificacion) {
-            $notificacion->markAsRead(); // ✅ Marcar como leída
+            $notificacion->markAsRead();
 
             // Redirigir al detalle del pago (no a la lista completa)
             return redirect()->route('pagos.show', $notificacion->data['pago_id']);

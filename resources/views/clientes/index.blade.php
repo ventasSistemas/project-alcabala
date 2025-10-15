@@ -8,9 +8,11 @@
         <h4 class="fw-bold text-primary mb-0 d-flex align-items-center">
             <i class="fas fa-users me-2"></i> Gestión de Clientes
         </h4>
+        @if(!auth()->user()->accesor)
         <button class="btn btn-primary rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCliente">
             <i class="fas fa-plus-circle me-1"></i> Nuevo Cliente
         </button>
+        @endif
     </div>
 
     <!-- Tabla -->
@@ -37,6 +39,7 @@
                                 <td>{{ $cliente->celular ?? '-' }}</td>
                                 <td>
                                     <!-- Botón Editar Cliente -->
+                                    @if(!auth()->user()->accesor)
                                     <button 
                                         class="btn btn-sm btn-outline-warning me-2" 
                                         data-bs-toggle="modal" 
@@ -49,7 +52,10 @@
                                     >
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    @endif
+
                                     <!-- Botón Elimninar Cliente -->
+                                    @if(!auth()->user()->accesor)
                                     <form action="{{ route('clientes.destroy', $cliente->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
@@ -57,6 +63,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endif
 
                                     <!-- Botón Ver Cartilla -->
                                     @php

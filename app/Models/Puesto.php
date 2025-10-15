@@ -37,6 +37,11 @@ class Puesto extends Model
         'primer_pago_fecha' => 'date',
     ];
 
+    public function accesores()
+    {
+        return $this->belongsToMany(Accesor::class, 'accesor_puesto');
+    }
+
     public function categoria()
     {
         return $this->belongsTo(CategoriaEstablecimiento::class, 'categoria_id');

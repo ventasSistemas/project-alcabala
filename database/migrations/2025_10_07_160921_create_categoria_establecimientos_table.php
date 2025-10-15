@@ -13,7 +13,7 @@ return new class extends Migration
 
             $table->string('nombre');
             $table->string('direccion')->nullable();
-            $table->string('imagen_lugar')->nullable(); // Imagen del lugar (opcional)
+            $table->string('imagen_lugar')->nullable(); 
 
             // Coordenadas actuales (capturadas automáticamente)
             $table->decimal('longitud_actual', 10, 7)->nullable();

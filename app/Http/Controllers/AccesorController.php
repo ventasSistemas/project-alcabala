@@ -27,14 +27,14 @@ class AccesorController extends Controller
             'password' => 'required|string|min:6|confirmed', // confirmado con password_confirmation
         ]);
 
-        // 🔐 Crear usuario vinculado
+        // Crear usuario vinculado
         $user = User::create([
             'name' => $data['nombres'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
 
-        // 👤 Crear accesor vinculado al usuario
+        // Crear accesor vinculado al usuario
         Accesor::create([
             'nombres' => $data['nombres'],
             'direccion' => $data['direccion'],

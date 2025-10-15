@@ -11,11 +11,12 @@ return new class extends Migration
         Schema::create('pagos', function (Blueprint $table) {
             $table->id();
 
-            $table->string('numero_pago')->nullable();     // numero de pago
-            $table->date('fecha_pago')->nullable();          // fecha en la que se pagó
-            $table->date('fecha_a_pagar');                   // fecha programada
-            $table->decimal('monto', 8, 2);  // monto
-            $table->enum('estado', ['PAGADO', 'PAGO ATRASADO',]);  //estado del registro
+            $table->string('numero_pago')->nullable();    
+            $table->date('fecha_pago')->nullable();        
+            $table->date('fecha_a_pagar');                  
+            $table->decimal('monto', 8, 2);  
+            $table->enum('estado', ['PAGADO', 'PAGO ATRASADO',]); 
+            $table->foreignId('cartilla_id')->constrained('cartillas')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -24,11 +25,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('pagos');
     }
-
-        //$table->unsignedBigInteger('contrato_id');
-        //$table->unsignedBigInteger('accesor_id')->nullable();
-        //$table->string('observacion')->nullable();
-        
-        //$table->foreign('contrato_id')->references('id')->on('contratos')->onDelete('cascade');
-        //$table->foreign('accesor_id')->references('id')->on('accesors')->onDelete('set null');
 };
