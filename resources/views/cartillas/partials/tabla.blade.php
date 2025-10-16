@@ -117,11 +117,46 @@
     </form>
 
     <script>
-        // Seleccionar todos los checks
-        document.getElementById('selectAll').addEventListener('change', function() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const formPagos = document.getElementById('formPagos');
+
+        // Log para saber si el formulario se detecta
+        console.log("✅ Script cargado, formulario detectado:", formPagos ? "Sí" : "No");
+
+        formPagos?.addEventListener('submit', (e) => {
+            console.log("🟡 Enviando formulario de pagos múltiples...");
+
+            // Verificar si hay cartillas seleccionadas
+            const seleccionadas = Array.from(document.querySelectorAll('.checkPago:checked')).map(ch => ch.value);
+            console.log("📋 Cartillas seleccionadas:", seleccionadas);
+
+            if (seleccionadas.length === 0) {
+                console.warn("⚠️ No hay cartillas seleccionadas.");
+                alert("Selecciona al menos una cartilla para registrar el pago.");
+                e.preventDefault();
+                return;
+            }
+
+            // Verificar destino
+            console.log("🔗 Acción del formulario:", formPagos.action);
+            console.log("🔍 Método:", formPagos.method);
+            console.log("🪟 Target:", formPagos.target);
+
+            // Esperar recarga
+            setTimeout(() => {
+                console.log("🔄 Recargando la página luego del envío...");
+                location.reload();
+            }, 1500);
+        });
+
+        // Checkbox "Seleccionar todo"
+        const selectAll = document.getElementById('selectAll');
+        selectAll?.addEventListener('change', function () {
             const checks = document.querySelectorAll('.checkPago');
             checks.forEach(ch => ch.checked = this.checked);
+            console.log("☑️ Estado 'Seleccionar todo':", this.checked);
         });
-        
-    </script>
+    });
+</script>
+
 @endif

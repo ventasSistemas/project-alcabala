@@ -15,11 +15,20 @@ class Pago extends Model
         'fecha_a_pagar',
         'monto',
         'estado',
-        'cartilla_id'
+        'enviado_a_caja',
+        'cartilla_id',
+        'accesor_id',
     ];
 
+    // Relación con Cartilla
     public function cartilla()
     {
         return $this->belongsTo(Cartilla::class);
+    }
+
+    // Relación con Accesor
+    public function accesor()
+    {
+        return $this->belongsTo(Accesor::class);
     }
 }

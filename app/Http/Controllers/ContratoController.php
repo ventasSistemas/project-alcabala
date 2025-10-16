@@ -106,8 +106,6 @@ class ContratoController extends Controller
     /**
      * Calcula las fechas de pago entre start y end según frecuencia.
      * - SEMANAL: una vez por semana (ajustado al JUEVES si se requiere)
-     * - MENSUAL: misma fecha cada mes (si no existe, ajusta al último día del mes)
-     * - ANUAL: cada año
      *
      * Retorna array de Carbon dates.
      */

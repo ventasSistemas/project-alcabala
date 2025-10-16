@@ -40,7 +40,7 @@ class CartillaController extends Controller
     {
         $puesto = Puesto::with(['cliente', 'categoria'])->findOrFail($puesto_id);
 
-        // 🔹 Validar datos mínimos
+        // Validar datos mínimos
         if (!$puesto->fecha_inicio || !$puesto->fecha_fin || !$puesto->primer_pago_monto) {
             return back()->with('error', 'El puesto no tiene configuradas fechas o monto inicial.');
         }
@@ -55,14 +55,14 @@ class CartillaController extends Controller
         $fechaInicio = Carbon::parse($puesto->fecha_inicio);
         $fechaFin = Carbon::parse($puesto->fecha_fin);
 
-        // 🔹 Buscar el primer jueves después (o igual) a la fecha de inicio
+        // Buscar el primer jueves después (o igual) a la fecha de inicio
         if (!$fechaInicio->isThursday()) {
             $fechaInicio->next(Carbon::THURSDAY);
         }
 
         $nro = 1;
 
-        // 🔹 Iterar por todos los jueves hasta la fecha fin
+        // Iterar por todos los jueves hasta la fecha fin
         while ($fechaInicio->lte($fechaFin)) {
             Cartilla::create([
                 'puesto_id' => $puesto->id,
@@ -135,6 +135,8 @@ class CartillaController extends Controller
                     ->value('max_num');
                 $numeroPago = $this->generarNumeroPago($ultimo);
 
+                $accesorId = auth()->user()->accesor->id ?? null;
+
                 // Crear registro del pago
                 $pago = Pago::create([
                     'numero_pago' => $numeroPago,
@@ -143,11 +145,10 @@ class CartillaController extends Controller
                     'monto' => $cartilla->cuota,
                     'estado' => 'PAGADO',
                     'cartilla_id' => $cartilla->id,
+                     'accesor_id' => $accesorId,
                 ]);
 
                 // Notificar al usuario (opcionalmente a todos los admins)
-                //$usuarios = User::where('role', 'admin')->get(); // ajusta si tu modelo usa 'rol' o 'tipo'
-                //Notification::send($usuarios, new PagoRealizadoNotification($pago));
 
                 // Si quieres que también se notifique al usuario autenticado:
                 if (auth()->check()) {
@@ -199,34 +200,36 @@ class CartillaController extends Controller
 
         DB::beginTransaction();
         try {
-            // Obtener el último número correlativo real
             $ultimo = Pago::select(DB::raw('MAX(CAST(SUBSTRING(numero_pago, 3) AS UNSIGNED)) as max_num'))
                         ->value('max_num');
-            $numeroPago = $this->generarNumeroPago($ultimo);
 
-            // Calcular el monto total
+            $numeroPago = $this->generarNumeroPago($ultimo);
             $montoTotal = Cartilla::whereIn('id', $ids)->sum('cuota');
 
-            // Crear registro del pago
+            // Obtener el accesor autenticado (si lo hay)
+            $user = auth()->user();
+            $accesorId = $user->accesor ? $user->accesor->id : null;
+
+            // Crear el pago con accesor_id incluido
             $pago = Pago::create([
                 'numero_pago' => $numeroPago,
                 'fecha_pago' => now(),
                 'fecha_a_pagar' => now(),
                 'monto' => $montoTotal,
                 'estado' => 'PAGADO',
+                'accesor_id' => $accesorId, 
             ]);
 
-            // Marcar las cartillas como pagadas
+            // Actualizar las cartillas pagadas
             Cartilla::whereIn('id', $ids)->update(['observacion' => 'Pagado']);
 
-            // 🔔 Enviar notificación del pago múltiple
+            // Notificación opcional
             if (auth()->check()) {
                 auth()->user()->notify(new PagoRealizadoNotification($pago));
             }
 
             DB::commit();
 
-            // Redirigir al ticket
             return redirect()->route('cartillas.ticket', [
                 'cartillas' => implode(',', $ids),
                 'pago' => $pago->id

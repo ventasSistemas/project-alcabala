@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
         ]);
 
-        Accesor::factory(10)->create();
-        CategoriaEstablecimiento::factory(5)->create();
-        Cliente::factory(5)->create();
+        Accesor::factory(3)->create();
+        CategoriaEstablecimiento::factory(3)->create();
+        Cliente::factory(1)->create();
     }
 }

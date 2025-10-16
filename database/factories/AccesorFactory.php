@@ -12,7 +12,7 @@ class AccesorFactory extends Factory
         return [
             'nombres' => $this->faker->name(),
             'direccion' => $this->faker->address(),
-            'celular' => substr($this->faker->phoneNumber(), 0, 9),
+            'celular' => $this->faker->optional()->numerify('9########'),
             'dni' => $this->faker->unique()->numerify('########'),
         ];
     }

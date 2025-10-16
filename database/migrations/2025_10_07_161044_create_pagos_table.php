@@ -10,13 +10,14 @@ return new class extends Migration
     {
         Schema::create('pagos', function (Blueprint $table) {
             $table->id();
-
             $table->string('numero_pago')->nullable();    
             $table->date('fecha_pago')->nullable();        
             $table->date('fecha_a_pagar');                  
             $table->decimal('monto', 8, 2);  
-            $table->enum('estado', ['PAGADO', 'PAGO ATRASADO',]); 
-            $table->foreignId('cartilla_id')->constrained('cartillas')->onDelete('cascade');
+            $table->enum('estado', ['PAGADO', 'PAGO ATRASADO']); 
+            $table->boolean('enviado_a_caja')->default(false);
+            $table->foreignId('cartilla_id')->nullable()->constrained('cartillas')->onDelete('set null');
+            $table->foreignId('accesor_id')->nullable()->constrained('accesors')->onDelete('set null');
             $table->timestamps();
         });
     }

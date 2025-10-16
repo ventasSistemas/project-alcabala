@@ -12,6 +12,8 @@ use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\CartillaController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CajaController;
+use App\Http\Controllers\MovimientoCajaController;
 
 
 
@@ -71,6 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/cartillas/{cartilla}/estado/{estado}', [App\Http\Controllers\CartillaController::class, 'cambiarEstado'])
         ->name('cartillas.cambiarEstado');
 
+        //Generar Ticket
         Route::get('/ticket/{cartillas}', [CartillaController::class, 'generarTicket'])
             ->name('cartillas.ticket');
 
@@ -79,6 +82,15 @@ Route::middleware('auth')->group(function () {
 
 
     });
+
+    //Caja
+    Route::resource('cajas', CajaController::class);
+    Route::post('cajas/{id}/cerrar', [CajaController::class, 'cerrar'])->name('cajas.cerrar');
+    Route::post('/pagos/enviar-todo-caja', [PagoController::class, 'enviarTodoCaja'])
+    ->name('pagos.enviarTodoCaja');
+
+    //Movimiento de Caja
+    Route::resource('movimientos', MovimientoCajaController::class);
 
     Route::get('/notificaciones/{id}/leer', function ($id) {
         $notificacion = auth()->user()->notifications()->find($id);

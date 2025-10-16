@@ -6,6 +6,7 @@ use App\Models\Accesor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\User;
+use App\Models\Caja;
 use Illuminate\Support\Facades\Hash;
 
 class AccesorController extends Controller
@@ -24,7 +25,7 @@ class AccesorController extends Controller
             'celular' => 'nullable|string|max:9',
             'dni' => 'required|string|size:8|unique:accesors,dni',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6|confirmed', // confirmado con password_confirmation
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         // Crear usuario vinculado
@@ -34,8 +35,8 @@ class AccesorController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        // Crear accesor vinculado al usuario
-        Accesor::create([
+        // Crear accesor vinculado
+        $accesor = Accesor::create([
             'nombres' => $data['nombres'],
             'direccion' => $data['direccion'],
             'celular' => $data['celular'],
@@ -43,7 +44,20 @@ class AccesorController extends Controller
             'user_id' => $user->id,
         ]);
 
-        return redirect()->route('accesores.index')->with('success', 'Accesor creado con su usuario correctamente.');
+        // Crear su caja asociada automáticamente
+        Caja::create([
+            'user_id' => $user->id,
+            'accesor_id' => $accesor->id,
+            'monto_inicial' => 0,
+            'total_ingresos' => 0,
+            'total_egresos' => 0,
+            'saldo_final' => 0,
+            'estado' => 'ABIERTA',
+            'fecha_apertura' => now(),
+        ]);
+
+        return redirect()->route('accesores.index')
+            ->with('success', 'Accesor creado con su usuario y caja inicial correctamente.');
     }
 
     public function update(Request $request, Accesor $accesor)

@@ -7,7 +7,7 @@
         <i class="fas fa-tachometer-alt me-2"></i> Panel Principal
     </h4>
 
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
         @php
             $cards = [
                 ['fas fa-tags', 'Total Categorías', $totalCategorias ?? 0, 'text-primary'],
@@ -28,6 +28,27 @@
                 </div>
             </div>
         @endforeach
+    </div>
+
+    <!-- 🔹 Nueva sección: Accesos rápidos -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fa-solid fa-cash-register me-2"></i> Accesos Rápidos</h5>
+        </div>
+        <div class="card-body text-center py-4">
+            <div class="row justify-content-center">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="{{ route('cajas.index') }}" class="btn btn-outline-success w-100 py-3 rounded-4 fw-semibold">
+                        <i class="fa-solid fa-box-archive fa-lg me-2"></i> Ir a Cajas
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="{{ route('movimientos.index') }}" class="btn btn-outline-info w-100 py-3 rounded-4 fw-semibold">
+                        <i class="fa-solid fa-money-bill-transfer fa-lg me-2"></i> Ver Movimientos
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

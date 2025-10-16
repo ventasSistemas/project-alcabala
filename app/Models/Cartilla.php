@@ -20,7 +20,7 @@ class Cartilla extends Model
         'accesor_cobro',
     ];
 
-    // 🔗 Relaciones
+    // Relaciones
     public function puesto()
     {
         return $this->belongsTo(Puesto::class);
